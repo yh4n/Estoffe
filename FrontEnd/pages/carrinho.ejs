@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoffe - Seu Carrinho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-50 font-sans min-h-screen flex flex-col pt-24">
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+        <div class="mb-8">
+            <span class="text-xs font-bold uppercase tracking-[0.4em] text-green-700 block mb-2">Sacola de
+                Compras</span>
+            <h1 class="text-3xl md:text-4xl font-light tracking-tight text-gray-900">Seu <span class="font-extrabold">Carrinho</span></h1>
+            <div class="w-12 h-[2px] bg-green-700 mt-3"></div>
+        </div>
+
+        <% if (produtosNoCarrinho.length===0) { %>
+            <div class="bg-white border border-gray-100 rounded-sm p-12 text-center shadow-sm max-w-md mx-auto my-12">
+                <div class="text-gray-300 text-6xl mb-4">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Seu carrinho está vazio</h2>
+                <p class="text-gray-500 text-sm mb-6">Que tal navegar pelo catálogo e escolher uma peça exclusiva de
+                    alta tapeçaria?</p>
+                <a href="/produtos" class="inline-block bg-green-950 hover:bg-green-800 text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm transition duration-300">
+                    Ver Produtos
+                </a>
+            </div>
+            <% } else { %>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+                    <div class="lg:col-span-2 space-y-4">
+                        <% produtosNoCarrinho.forEach(item=> { %>
+                            <div class="bg-white border border-gray-100 p-4 rounded-sm shadow-sm flex flex-col sm:flex-row items-center gap-4 transition hover:shadow-md">
+
+                                <img src="../<%= item.imagem %>" alt="<%= item.nome %>" class="w-24 h-24 object-cover rounded-sm bg-gray-50">
+
+                                <div class="flex-grow text-center sm:text-left">
+                                    <h3 class="font-bold text-gray-900 text-base">
+                                        <%= item.nome %>
+                                    </h3>
+                                    <p class="text-xs text-gray-400 mt-0.5">Código: #<%= item.codProduto %>
+                                    </p>
+                                    <p class="text-green-800 font-semibold text-sm mt-2">R$ <%= item.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                    </p>
+                                </div>
+
+                                <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+
+                                    <div class="flex items-center border border-gray-200 bg-gray-50 rounded-sm overflow-hidden">
+                                        <form action="/carrinho/atualizar/<%= item.codProduto %>" method="POST" class="inline">
+                                            <input type="hidden" name="quantidade" value="<%= item.quantidade - 1 %>">
+                                            <button type="submit" <%=item.quantidade <=1 ? 'disabled' : '' %>
+                                                class="px-2 py-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700
+                                                transition disabled:opacity-30 disabled:hover:bg-transparent
+                                                cursor-pointer">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                        </form>
+
+                                        <span class="px-3 py-1 text-sm font-bold text-gray-800 bg-white min-w-[32px] text-center select-none">
+                                            <%= item.quantidade %>
+                                        </span>
+
+                                        <form action="/carrinho/atualizar/<%= item.codProduto %>" method="POST" class="inline">
+                                            <input type="hidden" name="quantidade" value="<%= item.quantidade + 1 %>">
+                                            <button type="submit" class="px-2 py-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition cursor-pointer">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div class="text-right min-w-[90px]">
+                                        <span class="block text-xs text-gray-400">Subtotal</span>
+                                        <span class="font-extrabold text-gray-900 text-sm">R$ <%= item.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                    </div>
+
+                                    <form action="/carrinho/remover/<%= item.codProduto %>" method="POST" class="inline">
+                                        <button type="submit" class="text-gray-400 hover:text-red-600 p-2 transition" title="Remover item">
+                                            <i class="bi bi-trash3 text-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                            <% }) %>
+
+                                <div class="pt-2">
+                                    <a href="/produtos" class="text-sm text-green-800 hover:text-green-950 font-medium inline-flex items-center gap-2 transition">
+                                        <i class="bi bi-arrow-left"></i> Continuar comprando
+                                    </a>
+                                </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 p-6 rounded-sm shadow-md space-y-6 lg:sticky lg:top-28">
+                        <h2 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">Resumo do Pedido</h2>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-600">
+                                <span>Subtotal dos itens</span>
+                                <span>R$ <%= total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Entrega / Frete</span>
+                                <span class="text-green-700 font-medium">Grátis</span>
+                            </div>
+                            <hr class="border-gray-100 my-2">
+                            <div class="flex justify-between text-base font-bold text-gray-900 pt-2">
+                                <span>Total Estimado</span>
+                                <span class="text-xl text-green-950">R$ <%= total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                        </div>
+
+                        <form action="/pedido/finalizar" method="POST" >
+                            <button type="submit" class="w-full bg-green-950 hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-sm transition duration-300 uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm text-center">Finalizar Compra</button>
+                        </form>
+                        <p class="text-[11px] text-gray-400 text-center leading-relaxed">
+                            Ao finalizar, seu pedido será enviado para o painel de produção da Estoffe. O pagamento e
+                            detalhes de entrega serão combinados diretamente com a nossa equipe.
+                        </p>
+                    </div>
+
+                </div>
+                <% } %>
+    </main>
+
+</body>
+
+</html>

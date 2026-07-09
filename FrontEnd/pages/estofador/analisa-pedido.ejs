@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analisar Pedido #<%= pedido.codPedido %> - Estoffe estofador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/png" href="../../image/Icons/favicon-96x96.png" sizes="96x96" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+  <nav class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-xl font-bold tracking-wider">ESTOFFE Estofador</span>
+      <span class="bg-red-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">Estofador</span>
+    </div>
+    <a href="/estofador-dashboard"
+      class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
+      <i class="bi bi-box-arrow-right"></i>Voltar ao painel
+    </a>
+  </nav>
+
+  <main class="p-6 md:p-12 max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
+
+      <div
+        class="border-b border-gray-100 pb-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">Ordem
+            serviço</span>
+          <h1 class="text-2xl font-bold text-gray-800 mt-2">Pedido #<%= pedido.codPedido %>
+          </h1>
+          <p class="text-sm text-gray-500 mt-1">Recebido em: <%= pedido.dataPedido ? new
+              Date(pedido.dataPedido).toLocaleDateString('pt-BR') : '---' %>
+          </p>
+        </div>
+        <div>
+          <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-semibold">
+            <%= pedido.status %>
+          </span>
+        </div>
+      </div>
+
+      <!-- Itens Solicitados -->
+      <div class="mt-6 border-t border-gray-100 pt-6">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Itens Solicitados</h3>
+        <div class="bg-gray-50 rounded-sm p-4 border border-gray-100">
+          <% if (pedido.itens && pedido.itens.length> 0) { %>
+            <div class="divide-y divide-gray-200">
+              <% pedido.itens.forEach(function(item) { %>
+                <div class="py-3 flex justify-between items-center first:pt-0 last:pb-0">
+                  <div>
+                    <p class="font-semibold text-gray-800 text-sm">
+                      <%= item.nomeProduto %>
+                    </p>
+
+                    <p class="text-xs text-gray-500 italic mt-1">
+                      <strong>Obs:</strong>
+                      <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <span
+                      class="text-xs font-bold bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-md border border-zinc-200">
+                      Qtd: <%= item.quantidade %>
+                    </span>
+                  </div>
+                  <% }); %>
+                </div>
+                <% } else { %>
+                  <p class="text-sm text-gray-500 italic">Nenhum item vinculado a este orçamento no banco de dados.</p>
+                  <% } %>
+            </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</body>
+
+</html>

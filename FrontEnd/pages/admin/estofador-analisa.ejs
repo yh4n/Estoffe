@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditar Pedido #<%= pedido.codPedido %> - Estoffe Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="../../image/Icons/favicon-96x96.png" sizes="96x96" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <nav class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-3">
+            <span class="text-xl font-bold tracking-wider">ESTOFFE ADMIN</span>
+            <span class="bg-red-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">Gerente</span>
+        </div>
+        <a href="/admin/estofadores"
+            class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
+            <i class="bi bi-arrow-left"></i> Voltar para Estofadores
+        </a>
+    </nav>
+
+    <main class="p-6 md:p-12 max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
+
+            <div class="border-b border-gray-100 pb-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-green-700 bg-green-50 px-2.5 py-1 rounded-md">
+                        Visão de Auditoria Oficina
+                    </span>
+                    <h1 class="text-2xl font-bold text-gray-800 mt-2">Pedido #<%= pedido.codPedido %></h1>
+                    <p class="text-sm text-gray-500 mt-1">Recebido em: <%= pedido.dataPedido ? new Date(pedido.dataPedido).toLocaleDateString('pt-BR') : '---' %>
+                    </p>
+                </div>
+                <div>
+                    <% if (pedido.status === 'Em Produção') { %>
+                        <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1.5 rounded-full font-semibold">
+                            <%= pedido.status %>
+                        </span>
+                    <% } else if (pedido.status === 'Pronto' || pedido.status === 'Entregue') { %>
+                        <span class="bg-green-100 text-green-800 text-xs px-3 py-1.5 rounded-full font-semibold">
+                            <%= pedido.status %>
+                        </span>
+                    <% } else { %>
+                        <span class="bg-gray-100 text-gray-800 text-xs px-3 py-1.5 rounded-full font-semibold">
+                            <%= pedido.status %>
+                        </span>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Dados do Cliente</h3>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 h-full flex flex-col justify-center gap-3">
+                        <div>
+                            <p class="text-xs text-gray-500">Nome Completo</p>
+                            <p class="font-medium text-gray-800"><%= pedido.nomeCliente %></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">E-mail de Contato</p>
+                            <p class="font-medium text-gray-800"><%= pedido.emailCliente %></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Profissional Atribuído</h3>
+                    <div class="bg-zinc-50 p-4 rounded-xl border border-zinc-100 h-full flex flex-col justify-center">
+                        <p class="text-xs text-gray-500">Estofador Responsável</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <p class="font-bold text-zinc-800 text-base">
+                                <%= pedido.nomeEstofador || 'Não designado ou erro na atribuição' %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 border-t border-gray-100 pt-6">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Itens & Especificações</h3>
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <% if (pedido.itens && pedido.itens.length > 0) { %>
+                        <div class="divide-y divide-gray-200">
+                            <% pedido.itens.forEach(function(item) { %>
+                                <div class="py-4 flex justify-between items-center first:pt-0 last:pb-0">
+                                    <div class="space-y-1">
+                                        <p class="font-semibold text-gray-800 text-sm">
+                                            <%= item.nomeProduto %>
+                                        </p>
+                                        <p class="text-xs text-gray-600 bg-white inline-block px-2 py-1 rounded border border-gray-100">
+                                            <strong>Obs:</strong> <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
+                                        </p>
+                                        <p class="text-xs text-gray-400 block">
+                                            Preço Unitário: R$ <%= Number(item.precoUnitario).toFixed(2).replace('.', ',') %>
+                                        </p>
+                                    </div>
+                                    <div class="text-right space-y-1">
+                                        <span class="inline-block text-xs font-bold bg-zinc-100 text-zinc-800 px-2.5 py-0.5 rounded-md border border-zinc-200">
+                                            Qtd: <%= item.quantidade %>
+                                        </span>
+                                        <p class="text-xs font-bold text-gray-700 block">
+                                            Total: R$ <%= (Number(item.quantidade) * Number(item.precoUnitario)).toFixed(2).replace('.', ',') %>
+                                        </p>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p class="text-sm text-gray-500 italic text-center py-4">Nenhum item vinculado a este orçamento no banco de dados.</p>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+
+</html>

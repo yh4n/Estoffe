@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/../image/Icons/favicon-96x96(1).png" sizes="96x96" />
+    <title>Sobre Nós - Estoffe</title>
+    <script src="mudaNav.js"></script>
+    <link rel="icon" type="image/png" href="/../image/Icons/favicon-96x96.png" sizes="96x96" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/../css/style.css">
+</head>
+
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- ========================================== -->
+    <!--             HEADER / MENU / MOBILE         -->
+    <!-- ========================================== -->
+
+    <header id="main-header" class="flex items-center justify-between p-4 bg-green-950 shadow-md fixed top-0 left-0 w-full z-50 transition-all duration-500">
+
+        <a id="header-logo" href="/" class="flex items-center">
+            <img id="logo-img" src="../image/LogoNavBar.png" alt="Logo Estoffe" class="h-16 md:h-19 w-auto transition-all duration-500">
+        </a>
+
+        <button id="menu-btn" class="block md:hidden text-white focus:outline-none z-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                </path>
+            </svg>
+        </button>
+
+        <nav id="menu" class="fixed left-0 -top-full w-full h-screen bg-green-900/90 **shadow-lg shadow-green-950/50** flex flex-col items-center justify-center transition-all duration-300 md:static md:h-auto md:w-auto md:flex-row md:bg-transparent filter backdrop-blur-md md:backdrop-blur-5 **md:shadow-none**">
+            <ul class="flex flex-col items-center gap-8 text-sm font-medium uppercase tracking-widest md:flex-row md:space-x-8 md:gap-0">
+
+                <li>
+                    <% if (typeof usuario !=='undefined' && usuario) { %>
+                        <a href="/" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                            <i class="bi bi-house-door mr-1"></i>Início
+                        </a>
+                        <% } else { %>
+                            <a href="/" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                <i class="bi bi-house-door mr-1"></i>Início
+                            </a>
+                            <% } %>
+                </li>
+
+                <li>
+                    <a href="/produtos" class="nav-link-item text-white font-bold transition-colors duration-300" data-active="true">
+                        <i class="bi bi-bag mr-1"></i>Produtos
+                    </a>
+                </li>
+                <li>
+                    <a href="/sobre" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                        <i class="bi bi-info-circle mr-1"></i>Sobre
+                    </a>
+                </li>
+                <li>
+                    <a href="/contato" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                        <i class="bi bi-envelope mr-1"></i>Contato
+                    </a>
+                </li>
+
+                <% if (typeof usuario !=='undefined' && usuario) { %>
+                    <% if (usuario.tipo==='admin' ) { %>
+                        <li>
+                            <a href="/admin-dashboard" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                <i class="bi bi-shield-lock mr-1"></i> Painel Administrativo
+                            </a>
+                        </li>
+
+                        <% } else if (usuario.tipo==='estofador' ) { %>
+                            <li>
+                                <a href="/estofador-dashboard" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                    <i class="bi bi-tools mr-1"></i> Painel do Estofador
+                                </a>
+                            </li>
+
+                            <% } else { %>
+                                <li>
+                                    <a href="<%= usuario.tipo === 'client' ? '/client-dashboard' : '/perfil' %>" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                        <i class="bi bi-person-circle mr-1"></i> Meu Perfil
+                                    </a>
+                                </li>
+                                <% } %>
+
+                                    <li>
+                                        <a href="/logout" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                            <i class="bi bi-box-arrow-right mr-1"></i> Sair
+                                        </a>
+                                    </li>
+
+                                    <% } else { %>
+                                        <li>
+                                            <a href="/login" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                                <i class="bi bi-person mr-1"></i> Login
+                                            </a>
+                                        </li>
+                                        <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- HERO SECTION                               -->
+    <!-- ========================================== -->
+    <section class="hero">
+        <div class="hero-content flex flex-col lg:flex-row items-center justify-between min-h-[80vh] bg-gray-50 px-6 md:px-16 lg:px-24 pt-28 gap-12" id="inicio">
+
+            <!-- LADO ESQUERDO: Textos e Botões -->
+            <div class="flex flex-col items-start text-left max-w-2xl lg:w-7/12">
+                <span class="text-xs font-bold uppercase tracking-[0.3em] text-green-700 mb-4 block">
+                    Nossa Essência & Tradição
+                </span>
+
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900 tracking-tight leading-none mb-6">
+                    Sobre a <span class="font-extrabold text-green-950 block mt-2">ESTOFFE!</span>
+                </h1>
+
+                <div class="w-16 h-[2px] bg-green-700 mb-6"></div>
+
+                <p class="text-base md:text-lg text-gray-600 font-normal mb-8 max-w-xl leading-relaxed">
+                    Explore nossa caminhada na criação de estofados de alto padrão. Unimos a sofisticação do design
+                    contemporâneo ao rigoroso cuidado artesanal para transformar ambientes cotidianos em refúgios de
+                    puro conforto.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                    <a href="produtos.html" class="w-full sm:w-auto text-center inline-block bg-green-950 hover:bg-green-800 text-white font-semibold px-8 py-4 rounded-sm shadow-md transition-all duration-300 uppercase tracking-widest text-xs">
+                        Ver Coleção
+                    </a>
+                    <a href="contato.html" class="w-full sm:w-auto text-center inline-block bg-transparent hover:bg-gray-200 text-green-950 font-semibold px-8 py-4 rounded-sm transition-all duration-300 uppercase tracking-widest text-xs border border-green-950/30 hover:border-green-950">
+                        Fale Conosco
+                    </a>
+                </div>
+            </div>
+
+            <!-- LADO DIREITO: Elemento Visual Assimétrico -->
+            <div class="lg:w-5/12 w-full flex items-center justify-center lg:justify-end animate-fade-in">
+                <div class="relative w-full max-w-sm aspect-square bg-green-900/10 rounded-sm flex items-center justify-center p-8 border border-green-900/20">
+                    <div class="absolute -top-4 -left-4 w-12 h-12 border-t-2 border-l-2 border-green-900/40"></div>
+                    <div class="absolute -bottom-4 -right-4 w-12 h-12 border-b-2 border-r-2 border-green-900/40"></div>
+
+                    <div class="text-center">
+                        <p class="text-3xl font-serif italic text-green-950">Estoffe</p>
+                        <p class="text-xs uppercase tracking-widest text-gray-500 mt-2">Conceito & Loft</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SEÇÃO HISTÓRIA E AUTORIDADE                -->
+    <!-- ========================================== -->
+    <div class="py-20 bg-white px-6 md:px-16 lg:px-24 border-t border-gray-100">
+        <div class="text-center mb-16">
+            <span class="text-xs font-bold uppercase tracking-[0.3em] text-green-700 mb-3 block">Materializando Ideias
+                Realidade há</span>
+            <h2 class="text-3xl md:text-4xl font-light text-gray-900 tracking-tight">
+                Mais de <span class="font-extrabold text-green-950">20 Anos</span>
+            </h2>
+            <div class="w-12 h-[2px] bg-green-700 mx-auto mt-4"></div>
+        </div>
+
+        <!-- Conteúdo institucional -->
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 text-gray-600 leading-relaxed text-sm md:text-base mb-16">
+            <p>
+                Fundada no início dos anos 2000, a <strong class="text-gray-900">Estoffe</strong> nasceu com o firme
+                propósito de resgatar a essência da alta tapeçaria e estofaria sob medida. Cada peça produzida ou
+                minuciosamente restaurada em nosso ateliê carrega décadas de conhecimento técnico heráldico,
+                perfeitamente integrado às mais novas tendências globais de arquitetura e ergonomia.
+            </p>
+            <p>
+                Para nós, um sofá ou uma cabeceira não são meros componentes de mobília; eles representam o coração de
+                uma sala de estar, o cenário de memórias afetivas em família e o refúgio do descanso diário. É por isso
+                que nossa curadoria seleciona rigidamente desde as madeiras de reflorestamento imunes até os arremates
+                invisíveis da costura final.
+            </p>
+        </div>
+
+        <!-- Grid de Métricas Minimalistas (Autoridade) -->
+        <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center border-t border-gray-100 pt-12">
+            <div>
+                <p class="text-3xl md:text-4xl font-extrabold text-green-950">20+</p>
+                <p class="text-xs uppercase tracking-wider text-gray-400 mt-1">Anos de História</p>
+            </div>
+            <div>
+                <p class="text-3xl md:text-4xl font-extrabold text-green-950">5k+</p>
+                <p class="text-xs uppercase tracking-wider text-gray-400 mt-1">Projetos Executados</p>
+            </div>
+            <div>
+                <p class="text-3xl md:text-4xl font-extrabold text-green-950">100%</p>
+                <p class="text-xs uppercase tracking-wider text-gray-400 mt-1">Madeira Certificada</p>
+            </div>
+            <div>
+                <p class="text-3xl md:text-4xl font-extrabold text-green-950">Acabamento</p>
+                <p class="text-xs uppercase tracking-wider text-gray-400 mt-1">Artesanal Premium</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SEÇÃO ATUAÇÃO E SERVIÇOS                   -->
+    <!-- ========================================== -->
+    <section class="py-20 bg-gray-50 px-6 md:px-16 lg:px-24 border-t border-b border-gray-200/60">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+                <!-- Card 1 -->
+                <div class="bg-white p-8 rounded-sm shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-300">
+                    <div class="text-green-800 text-3xl mb-4"><i class="bi bi-tools"></i></div>
+                    <h3 class="text-xl font-bold text-green-950 mb-2">Reforma de Alta Costura</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed font-light">
+                        Devolvemos a estrutura original e a imponência do seu estofado antigo, substituindo espumas
+                        estruturais, reforçando cintas e atualizando o revestimento de forma milimétrica.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-white p-8 rounded-sm shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-300">
+                    <div class="text-green-800 text-3xl mb-4"><i class="bi bi-pencil-square"></i></div>
+                    <h3 class="text-xl font-bold text-green-950 mb-2">Projetos Sob Medida</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed font-light">
+                        Desenvolvemos sofás modulares, pufes geométricos e cabeceiras sob demanda, baseando-nos
+                        rigorosamente na planta do seu ambiente e nas densidades de assento de sua preferência.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-white p-8 rounded-sm shadow-sm border border-gray-200/60 hover:shadow-md transition-shadow duration-300">
+                    <div class="text-green-800 text-3xl mb-4"><i class="bi bi-gem"></i></div>
+                    <h3 class="text-xl font-bold text-green-950 mb-2">Tecidos Selecionados</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed font-light">
+                        Curadoria restrita focada em linhos rústicos puros, couros legítimos amaciados, veludos belgas
+                        de alta gramatura e tramas tecnológicas hidrorrepelentes e amigáveis para pets.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- FOOTER                                     -->
+    <!-- ========================================== -->
+    <footer class="bg-green-950 text-gray-400 text-sm py-12 px-6 md:px-16 lg:px-24 mt-auto border-t border-green-900">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div>
+                <p class="text-white font-bold text-lg tracking-wider uppercase">Estoffe</p>
+                <p class="text-xs text-gray-400 mt-1">&copy; 2026 Estoffe Estofaria Premium. Todos os direitos
+                    reservados.</p>
+            </div>
+
+            <!-- Redes Sociais no Rodapé -->
+            <div class="flex space-x-6 text-xl">
+                <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-whatsapp"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="/../pages/animacoes/anima.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+
+</body>
+
+</html>

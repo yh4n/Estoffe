@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Estoffe</title>
+  <link rel="icon" type="image/png" href="../../image/Icons/favicon-96x96.png" sizes="96x96" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+  <header class="flex items-center justify-between p-4 bg-green-950 shadow-md text-white">
+    <div class="flex items-center gap-3">
+        <span class="text-xl font-bold tracking-wider uppercase">Estoffe Admin</span>
+        <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full font-semibold text-white">Gerente</span>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <a href="/admin/produtos/novo" class="text-sm bg-green-700 hover:bg-green-600 px-4 py-2 rounded-md transition-colors duration-300 font-medium flex items-center gap-1">
+            <i class="bi bi-plus-circle"></i> Novo Produto
+        </a>
+
+        <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors duration-300">
+            <i class="bi bi-box-arrow-right mr-1"></i> Sair
+        </a>
+    </div>
+</header>
+
+  <main class="p-6 md:p-12 max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Visão Geral do Sistema</h1>
+    <p class="text-gray-600 mb-8">Gerenciamento de pedidos, estofadores e relatórios de produção.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <a href="/admin/orcamentos"
+        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between hover:border-green-500 hover:shadow-md transition-all duration-200 group cursor-pointer">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase">Novos Orçamentos</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">
+            <%= totalOrcamentos %>
+          </p>
+        </div>
+        <div
+          class="w-12 h-12 bg-green-100 group-hover:bg-green-700 group-hover:text-white rounded-lg flex items-center justify-center text-green-700 text-xl transition-colors">
+          <i class="bi bi-file-earmark-text"></i>
+        </div>
+      </a>
+
+      <a href="/admin/producao"
+        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between hover:border-green-600 hover:shadow-md transition-all duration-200 group cursor-pointer">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase">Concluídos</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">
+            <%= totalConcluidos %>
+          </p>
+        </div>
+        <div
+          class="w-12 h-12 bg-green-100 group-hover:bg-green-600 group-hover:text-white rounded-lg flex items-center justify-center text-green-700 text-xl transition-colors">
+          <i class="bi bi-check2-all"></i>
+        </div>
+      </a>
+
+      <a href="/admin/estofadores"
+        class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between hover:border-blue-400 hover:shadow-md transition-all duration-200 group cursor-pointer">
+        <div>
+          <p class="text-sm font-medium text-gray-500 uppercase">Estofadores Ativos</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">
+            <%= totalEstofadores %>
+          </p>
+        </div>
+        <div
+          class="w-12 h-12 bg-blue-100 group-hover:bg-blue-600 group-hover:text-white rounded-lg flex items-center justify-center text-blue-700 text-xl transition-colors">
+          <i class="bi bi-people"></i>
+        </div>
+      </a>
+    </div>
+
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <h3 class="font-bold text-gray-700">Últimas Ordens de Serviço</h3>
+      </div>
+      <div class="p-6 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">
+              <th class="pb-3">Nº Pedido</th>
+              <th class="pb-3">Cliente</th>
+              <th class="pb-3">Data de Entrada</th>
+              <th class="pb-3">Estofador Responsável</th>
+              <th class="pb-3 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-gray-100 text-gray-600">
+            <% if (ordensServico && ordensServico.length> 0) { %>
+              <% ordensServico.forEach(function(ordem) { %>
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                  <td class="py-4 font-bold text-green-900">#<%= ordem.codPedido %>
+                  </td>
+                  <td class="py-4 font-medium text-gray-800">
+                    <%= ordem.nomeCliente %>
+                  </td>
+                  <td class="py-4">
+                    <%= ordem.dataPedido ? new Date(ordem.dataPedido).toLocaleDateString('pt-BR') : '---' %>
+                  </td>
+                  <td class="py-4 text-gray-500">
+                    <%= ordem.nomeEstofador || 'Não atribuído' %>
+                  </td>
+
+                  <td class="py-4 text-right">
+                    <% var statusLimpo=ordem.status ? ordem.status.trim().toLowerCase() : '' ; %>
+
+                      <% if (statusLimpo==='em produção' || statusLimpo==='em producao' ) { %>
+                        <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">Na
+                          Oficina</span>
+                        <% } else if (statusLimpo==='pronto' ) { %>
+                          <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-medium">Pronto
+                            para Entrega</span>
+                          <% } else if (statusLimpo==='entregue' ) { %>
+                            <span
+                              class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-medium">Entregue</span>
+                            <% } else if (statusLimpo==='cancelado' ) { %>
+                              <span
+                                class="bg-red-100 text-red-800 text-xs px-2.5 py-1 rounded-full font-medium">Cancelado</span>
+                              <% } else { %>
+                                <span class="bg-gray-100 text-gray-800 text-xs px-2.5 py-1 rounded-full font-medium">
+                                  <%= ordem.status %>
+                                </span>
+                                <% } %>
+                  </td>
+                </tr>
+                <% }); %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="5" class="py-8 text-center text-gray-400">Nenhuma ordem de serviço registrada no
+                        momento.</td>
+                    </tr>
+                    <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+</body>
+
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/../image/Icons/favicon-96x96(1).png" sizes="96x96" />
+  <title>Contato - Estoffe</title>
+  <script src="mudaNav.js"></script>
+  <link rel="icon" type="image/png" href="/../image/Icons/favicon-96x96.png" sizes="96x96" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="/../css/style.css">
+</head>
+
+
+<body>
+  <!-- ========================================== -->
+  <!--             HEADER / MENU / MOBILE         -->
+  <!-- ========================================== -->
+
+  <header id="main-header"
+    class="flex items-center justify-between p-4 bg-green-950 shadow-md fixed top-0 left-0 w-full z-50 transition-all duration-500">
+
+    <a id="header-logo" href="/" class="flex items-center">
+      <img id="logo-img" src="../image/LogoNavBar.png" alt="Logo Estoffe"
+        class="h-16 md:h-19 w-auto transition-all duration-500">
+    </a>
+
+    <button id="menu-btn" class="block md:hidden text-white focus:outline-none z-50">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+        </path>
+      </svg>
+    </button>
+
+    <nav id="menu"
+      class="fixed left-0 -top-full w-full h-screen bg-green-900/90 **shadow-lg shadow-green-950/50** flex flex-col items-center justify-center transition-all duration-300 md:static md:h-auto md:w-auto md:flex-row md:bg-transparent filter backdrop-blur-md md:backdrop-blur-5 **md:shadow-none**">
+      <ul
+        class="flex flex-col items-center gap-8 text-sm font-medium uppercase tracking-widest md:flex-row md:space-x-8 md:gap-0">
+
+        <li>
+          <% if (typeof usuario !=='undefined' && usuario) { %>
+            <a href="/" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+              <i class="bi bi-house-door mr-1"></i>Início
+            </a>
+            <% } else { %>
+              <a href="/" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                <i class="bi bi-house-door mr-1"></i>Início
+              </a>
+              <% } %>
+        </li>
+
+        <li>
+          <a href="/produtos" class="nav-link-item text-white font-bold transition-colors duration-300"
+            data-active="true">
+            <i class="bi bi-bag mr-1"></i>Produtos
+          </a>
+        </li>
+        <li>
+          <a href="/sobre" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+            <i class="bi bi-info-circle mr-1"></i>Sobre
+          </a>
+        </li>
+        <li>
+          <a href="/contato" class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+            <i class="bi bi-envelope mr-1"></i>Contato
+          </a>
+        </li>
+
+        <% if (typeof usuario !=='undefined' && usuario) { %>
+          <% if (usuario.tipo==='admin' ) { %>
+            <li>
+              <a href="/admin-dashboard"
+                class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                <i class="bi bi-shield-lock mr-1"></i> Painel Administrativo
+              </a>
+            </li>
+
+            <% } else if (usuario.tipo==='estofador' ) { %>
+              <li>
+                <a href="/estofador-dashboard"
+                  class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                  <i class="bi bi-tools mr-1"></i> Painel do Estofador
+                </a>
+              </li>
+
+              <% } else { %>
+                <li>
+                  <a href="<%= usuario.tipo === 'client' ? '/client-dashboard' : '/perfil' %>"
+                    class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                    <i class="bi bi-person-circle mr-1"></i> Meu Perfil
+                  </a>
+                </li>
+                <% } %>
+
+                  <li>
+                    <a href="/logout"
+                      class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                      <i class="bi bi-box-arrow-right mr-1"></i> Sair
+                    </a>
+                  </li>
+
+                  <% } else { %>
+                    <li>
+                      <a href="/login"
+                        class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                        <i class="bi bi-person mr-1"></i> Login
+                      </a>
+                    </li>
+                    <% } %>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="relative bg-green-950 text-white pt-50 pb-40  px-8 md:px-25 lg:px-33 overflow-hidden">
+    <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
+      <span class="text-[24vw] text-white font-serif font-bold italic select-none">Estoffe</span>
+    </div>
+
+    <div class="max-w-7xl mx-auto relative z-10 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-[0.6em] text-green-400 mb-3 block">Contato</span>
+        <h1 class="text-5xl md:text-7xl font-light tracking-tight">Alta <span class="font-extrabold text-white">Tapeçaria</span></h1>
+        <div class="w-16 h-[2px] bg-green-400 mt-4 mx-auto md:mx-0"></div>
+      </div>
+      <p class="text-gray-300 font-light max-w-md text-sm md:text-base leading-relaxed">
+        Envie sua mensagem e traga sua demanda para a ESTOFFE. Garantimos suporte especializado e assessoria na escolha de materiais para entregar a máxima qualidade ao seu espaço.
+      </p>
+    </div>
+</section>
+
+  <main class="py-20 px-6 md:px-16 lg:px-24 flex-grow">
+    <div>
+      <h2 class="text-3xl font-bold text-center mb-12">Faça seu Orçamento</h2>
+      <div class="max-w-3xl mx-auto bg-green-100/10 p-8 rounded-lg shadow-lg">
+        <form action="/contato/enviar" method="POST" class="space-y-4">
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">Nome</label>
+            <input type="text" name="nome" required
+              class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">E-mail</label>
+            <input type="email" name="email" required
+              class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700">
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700">Mensagem</label>
+            <textarea name="mensagem" required rows="4"
+              class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700"></textarea>
+          </div>
+
+          <button type="submit"
+            class="px-6 py-3 bg-green-900 hover:bg-green-700 text-white font-semibold rounded-md transition-colors duration-300 cursor-pointer">
+            Enviar Mensagem
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-green-950 text-gray-400 text-sm py-12 px-6 md:px-16 lg:px-24 border-t border-green-900">
+    <div
+      class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div>
+        <p class="text-white font-bold text-lg tracking-wider uppercase">Estoffe</p>
+        <p class="text-xs text-gray-400 mt-1">&copy; 2026 Estoffe Estofaria Premium. Todos os direitos reservados.</p>
+      </div>
+
+      <div class="flex space-x-6 text-xl">
+        <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-instagram"></i></a>
+        <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-facebook"></i></a>
+        <a href="#" class="hover:text-white transition-colors duration-300"><i class="bi bi-whatsapp"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/../pages/animacoes/anima.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
+    integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
