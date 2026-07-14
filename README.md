@@ -25,4 +25,4 @@ O Estoffe nasceu como um Projeto de Conclusão de Curso com o objetivo de digita
 ## 🧑‍💻 Autores
 
 * **Yohan Dias Eduardo** - [yohan-dias-eduardo](https://www.linkedin.com/in/yohan-dias-eduardo-7a2ab0325/) / [diaseduardoyo@gmail.com](mailto:diaseduardoyo@gmail.com)
-* **Rayssa Maciel da Silva** - [E-mail](mailto:macielsilva@gmail.com)
+* **Rayssa da Silva Maciel** - [rayssamaciel234@gmail.com](mailto:rayssamaciel234@gmail.com)
