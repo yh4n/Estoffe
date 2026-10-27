@@ -128,13 +128,50 @@ async function prepararSchemaEstoque() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS estoque_produtos (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            codProduto INT DEFAULT NULL,
             nome_produto VARCHAR(100) NOT NULL,
             descricao TEXT NULL,
             quantidade_disponivel INT UNSIGNED NOT NULL DEFAULT 0,
             preco_unitario DECIMAL(10, 2) NOT NULL DEFAULT 0,
-            data_ultima_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            data_ultima_atualizacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_estoque_produtos_codProduto (codProduto),
+            CONSTRAINT fk_estoque_produtos_produto
+                FOREIGN KEY (codProduto) REFERENCES produto(codProduto) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
     `);
+
+    const [colunasEstoqueProdutos] = await pool.query(
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'estoque_produtos'
+            AND COLUMN_NAME = 'codProduto'`,
+    );
+    if (!colunasEstoqueProdutos.length) {
+        await pool.query('ALTER TABLE estoque_produtos ADD COLUMN codProduto INT DEFAULT NULL AFTER id');
+    }
+
+    const [indicesEstoqueProdutos] = await pool.query(
+        `SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'estoque_produtos'
+            AND COLUMN_NAME = 'codProduto' AND NON_UNIQUE = 0`,
+    );
+    if (!indicesEstoqueProdutos.length) {
+        await pool.query(
+            'ALTER TABLE estoque_produtos ADD UNIQUE KEY uq_estoque_produtos_codProduto (codProduto)',
+        );
+    }
+
+    const [chavesEstoqueProdutos] = await pool.query(
+        `SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'estoque_produtos'
+            AND COLUMN_NAME = 'codProduto' AND REFERENCED_TABLE_NAME = 'produto'`,
+    );
+    if (!chavesEstoqueProdutos.length) {
+        await pool.query(
+            `ALTER TABLE estoque_produtos
+             ADD CONSTRAINT fk_estoque_produtos_produto
+             FOREIGN KEY (codProduto) REFERENCES produto(codProduto) ON DELETE SET NULL`,
+        );
+    }
 
     await pool.query(`
         CREATE TABLE IF NOT EXISTS movimentacao_estoque (
@@ -175,6 +212,68 @@ async function prepararSchemaEstoque() {
     if (alteracoesProduto.length) {
         await pool.query(`ALTER TABLE produto ${alteracoesProduto.join(', ')}`);
     }
+
+    const [[produtosCatalogo], [estoquesSemVinculo]] = await Promise.all([
+        pool.query('SELECT codProduto, nome, descricao, quantidadeEstoque, preco FROM produto'),
+        pool.query('SELECT id, nome_produto FROM estoque_produtos WHERE codProduto IS NULL'),
+    ]);
+    const normalizarNome = (nome) => String(nome).trim().toLocaleLowerCase('pt-BR');
+    const quantidadePorNome = (itens, obterNome) => {
+        const quantidades = new Map();
+        for (const item of itens) {
+            const nome = normalizarNome(obterNome(item));
+            quantidades.set(nome, (quantidades.get(nome) || 0) + 1);
+        }
+        return quantidades;
+    };
+    const produtosPorNome = new Map(
+        produtosCatalogo.map((produto) => [normalizarNome(produto.nome), produto]),
+    );
+    const contagemProdutos = quantidadePorNome(produtosCatalogo, (produto) => produto.nome);
+    const contagemEstoques = quantidadePorNome(estoquesSemVinculo, (estoque) => estoque.nome_produto);
+    for (const estoque of estoquesSemVinculo) {
+        const nome = normalizarNome(estoque.nome_produto);
+        const produto = produtosPorNome.get(nome);
+        if (
+            !produto ||
+            contagemProdutos.get(nome) !== 1 ||
+            contagemEstoques.get(nome) !== 1
+        ) {
+            continue;
+        }
+        await pool.query(
+            `UPDATE estoque_produtos
+                SET codProduto = ?, nome_produto = ?, descricao = ?,
+                    quantidade_disponivel = ?, preco_unitario = ?
+              WHERE id = ? AND codProduto IS NULL`,
+            [
+                produto.codProduto,
+                produto.nome,
+                produto.descricao || `Produto ${produto.nome} em estoque`,
+                produto.quantidadeEstoque,
+                produto.preco,
+                estoque.id,
+            ],
+        );
+    }
+    await pool.query(`
+        UPDATE estoque_produtos ep
+        INNER JOIN produto p ON p.codProduto = ep.codProduto
+           SET ep.nome_produto = p.nome,
+               ep.descricao = COALESCE(p.descricao, CONCAT('Produto ', p.nome, ' em estoque')),
+               ep.quantidade_disponivel = p.quantidadeEstoque,
+               ep.preco_unitario = p.preco
+    `);
+    await pool.query(`
+        INSERT INTO estoque_produtos
+            (codProduto, nome_produto, descricao, quantidade_disponivel, preco_unitario)
+        SELECT p.codProduto, p.nome,
+               COALESCE(p.descricao, CONCAT('Produto ', p.nome, ' em estoque')),
+               p.quantidadeEstoque, p.preco
+          FROM produto p
+          LEFT JOIN estoque_produtos ep ON ep.codProduto = p.codProduto
+         WHERE ep.id IS NULL
+    `);
 
     const [pagamentoColunas] = await pool.query(
         `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS

@@ -692,6 +692,14 @@ router.get(
       const [produtos] = await db.query(
         "SELECT * FROM estoque_produtos ORDER BY nome_produto ASC",
       );
+      const [produtosSemEstoque] = await db.query(
+        `SELECT p.codProduto, p.nome
+           FROM produto p
+          WHERE NOT EXISTS (
+            SELECT 1 FROM estoque_produtos ep WHERE ep.codProduto = p.codProduto
+          )
+          ORDER BY p.nome ASC`,
+      );
       const [movimentacoes] = await db.query(`
       SELECT id, tipo_item, item_id, tipo_movimentacao, quantidade,
              data_movimentacao, observacao,
@@ -710,6 +718,7 @@ router.get(
         usuario: req.session.usuario,
         materiais,
         produtos,
+        produtosSemEstoque,
         movimentacoes,
       });
     } catch (error) {
@@ -759,29 +768,60 @@ router.post(
   verificarAutenticacao(["admin"]),
   apenasAdmin,
   async (req, res) => {
-    const { nome, descricao, quantidade_disponivel, preco_unitario } = req.body;
+    const codProduto = Number(req.body.codProduto);
+    const quantidade_disponivel = req.body.quantidade_disponivel;
     const quantidadeInicial = Number(quantidade_disponivel);
-    const preco = Number(preco_unitario);
 
     if (
-      !nome ||
+      !Number.isInteger(codProduto) ||
+      codProduto < 1 ||
       !Number.isInteger(quantidadeInicial) ||
-      quantidadeInicial < 0 ||
-      !Number.isFinite(preco) ||
-      preco < 0
+      quantidadeInicial < 0
     ) {
       return res.status(400).send("Dados inválidos para o produto.");
     }
 
+    const connection = await db.getConnection();
     try {
-      await db.query(
-        "INSERT INTO estoque_produtos (nome_produto, descricao, quantidade_disponivel, preco_unitario) VALUES (?, ?, ?, ?)",
-        [nome.trim(), descricao || null, quantidadeInicial, preco],
+      await connection.beginTransaction();
+      const [[produto]] = await connection.query(
+        `SELECT p.codProduto, p.nome, p.descricao, p.preco
+           FROM produto p
+          WHERE p.codProduto = ?
+            AND NOT EXISTS (
+              SELECT 1 FROM estoque_produtos ep WHERE ep.codProduto = p.codProduto
+            )
+          FOR UPDATE`,
+        [codProduto],
       );
+      if (!produto) {
+        await connection.rollback();
+        return res.status(409).send("Produto inexistente ou já vinculado ao estoque.");
+      }
+      await connection.query(
+        `INSERT INTO estoque_produtos
+            (codProduto, nome_produto, descricao, quantidade_disponivel, preco_unitario)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          produto.codProduto,
+          produto.nome,
+          produto.descricao || `Produto ${produto.nome} em estoque`,
+          quantidadeInicial,
+          produto.preco,
+        ],
+      );
+      await connection.query(
+        "UPDATE produto SET quantidadeEstoque = ? WHERE codProduto = ?",
+        [quantidadeInicial, codProduto],
+      );
+      await connection.commit();
       res.redirect("/admin/estoque");
     } catch (error) {
+      await connection.rollback();
       console.error("Erro ao cadastrar produto no estoque:", error);
       res.status(500).send("Erro interno ao cadastrar o produto.");
+    } finally {
+      connection.release();
     }
   },
 );
@@ -819,8 +859,11 @@ router.post(
         tipoItem === "MATERIAL" ? "estoque_materiais" : "estoque_produtos";
       const colunaQuantidade =
         tipoItem === "MATERIAL" ? "quantidade" : "quantidade_disponivel";
+      const colunaProduto =
+        tipoItem === "PRODUTO" ? ", codProduto" : "";
       const [itens] = await connection.query(
-        `SELECT ${colunaQuantidade} AS saldo FROM ${tabela} WHERE id = ? FOR UPDATE`,
+        `SELECT ${colunaQuantidade} AS saldo${colunaProduto}
+           FROM ${tabela} WHERE id = ? FOR UPDATE`,
         [id],
       );
 
@@ -850,6 +893,12 @@ router.post(
         `UPDATE ${tabela} SET ${colunaQuantidade} = ? WHERE id = ?`,
         [novoSaldo, id],
       );
+      if (tipoItem === "PRODUTO" && itens[0].codProduto) {
+        await connection.query(
+          "UPDATE produto SET quantidadeEstoque = ? WHERE codProduto = ?",
+          [novoSaldo, itens[0].codProduto],
+        );
+      }
       await connection.query(
         "INSERT INTO movimentacao_estoque (tipo_item, item_id, tipo_movimentacao, quantidade, observacao) VALUES (?, ?, ?, ?, ?)",
         [
@@ -994,8 +1043,9 @@ router.post(
       const descricaoEstoqueProduto =
         descricaoProduto || `Produto ${nome.trim()} em estoque`;
       await connection.query(
-        "INSERT INTO estoque_produtos (nome_produto, descricao, quantidade_disponivel, preco_unitario) VALUES (?, ?, ?, ?)",
+        "INSERT INTO estoque_produtos (codProduto, nome_produto, descricao, quantidade_disponivel, preco_unitario) VALUES (?, ?, ?, ?, ?)",
         [
+          produto.insertId,
           nome.trim(),
           descricaoEstoqueProduto,
           quantidadeDisponivel,
@@ -1222,34 +1272,22 @@ router.post(
       );
 
       await connection.query(
-        "UPDATE estoque_produtos SET nome_produto = ?, descricao = ?, quantidade_disponivel = ?, preco_unitario = ? WHERE nome_produto = ? ORDER BY id DESC LIMIT 1",
+        `INSERT INTO estoque_produtos
+            (codProduto, nome_produto, descricao, quantidade_disponivel, preco_unitario)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            nome_produto = VALUES(nome_produto),
+            descricao = VALUES(descricao),
+            quantidade_disponivel = VALUES(quantidade_disponivel),
+            preco_unitario = VALUES(preco_unitario)`,
         [
+          idProduto,
           nome.trim(),
           descricaoProduto || `Produto ${nome.trim()} em estoque`,
           quantidadeDisponivel,
           precoNumerico,
-          produtoExistente.nome || nome.trim(),
         ],
       );
-
-      if (
-        (
-          await connection.query(
-            "SELECT id FROM estoque_produtos WHERE nome_produto = ? LIMIT 1",
-            [nome.trim()],
-          )
-        )[0].length === 0
-      ) {
-        await connection.query(
-          "INSERT INTO estoque_produtos (nome_produto, descricao, quantidade_disponivel, preco_unitario) VALUES (?, ?, ?, ?)",
-          [
-            nome.trim(),
-            descricaoProduto || `Produto ${nome.trim()} em estoque`,
-            quantidadeDisponivel,
-            precoNumerico,
-          ],
-        );
-      }
 
       await connection.query(
         "DELETE FROM produtomaterial WHERE codProduto = ?",

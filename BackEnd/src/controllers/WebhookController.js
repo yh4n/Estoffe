@@ -125,12 +125,22 @@ router.post("/webhooks/asaas", async (req, res) => {
         if (Number(item.sob_medida) === 1) continue;
 
         const [resultado] = await connection.query(
-          `UPDATE produto
-              SET quantidadeEstoque = quantidadeEstoque - ?
-            WHERE codProduto = ? AND quantidadeEstoque >= ?`,
-          [item.quantidade, item.codProduto, item.quantidade],
+          `UPDATE produto p
+           INNER JOIN estoque_produtos ep ON ep.codProduto = p.codProduto
+              SET p.quantidadeEstoque = p.quantidadeEstoque - ?,
+                  ep.quantidade_disponivel = ep.quantidade_disponivel - ?
+            WHERE p.codProduto = ?
+              AND p.quantidadeEstoque >= ?
+              AND ep.quantidade_disponivel >= ?`,
+          [
+            item.quantidade,
+            item.quantidade,
+            item.codProduto,
+            item.quantidade,
+            item.quantidade,
+          ],
         );
-        if (resultado.affectedRows !== 1) {
+        if (resultado.affectedRows === 0) {
           const erroEstoque = new Error(
             `Estoque insuficiente para o produto ${item.codProduto}.`,
           );
