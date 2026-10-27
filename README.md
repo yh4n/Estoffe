@@ -1,48 +1,153 @@
-# Estoffe 🛋️
+# Estoffe
 
-> **Projeto de Conclusão de Curso (TCC)** > O **Estoffe** é uma plataforma web desenvolvida para o segmento de estofaria, focada em modernizar o atendimento ao cliente, exibição de portfólio e gestão de serviços.
+Plataforma web de uma estofaria para apresentar produtos, receber pedidos e orcamentos e acompanhar a producao. A interface e em portugues; clientes, administradores e estofadores possuem areas diferentes.
 
----
+## Tecnologias
 
-## 📌 Sobre o Projeto
+- Node.js e Express 5
+- EJS, HTML, Tailwind CSS e JavaScript
+- MySQL (conexao com `mysql2`)
+- Gemini API para sugestoes de texto, opcional
+- Asaas para pagamentos reais, opcional em ambiente local
 
-O Estoffe nasceu como um Projeto de Conclusão de Curso com o objetivo de digitalizar os processos de uma estofaria tradicional. A plataforma permite que clientes conheçam os serviços, solicitem orçamentos e acompanhem de forma prática o status de suas ordens de serviço, trazendo inovação para o setor.
+## Requisitos
 
-## 🚀 Funcionalidades Principais
+- Node.js compativel com as dependencias do projeto
+- MySQL com permissao para criar/alterar tabelas
+- Uma copia do repositorio
 
-* 💻 **Apresentação Gráfica:** Vitrine digital para exposição de trabalhos realizados (portfólio).
-* 📝 **Solicitação de Orçamentos:** Formulário intuitivo para captação de novos pedidos de clientes.
-* 📊 **Painel Administrativo:** Gerenciamento de pedidos, contatos e serviços por parte do administrador.
+## Instalacao e configuracao
 
-## 🛠️ Tecnologias Utilizadas
+1. Instale as dependencias:
 
-* **Frontend:** HTML5, CSS3, JavaScript
-* **Backend:** Node.js, EJS
-* **Banco de Dados:** MySQL
+   ```sh
+   npm install
+   ```
 
-## Testar sem cobrança
+2. Crie um banco MySQL e importe `estoffe.sql`. O arquivo inclui a estrutura principal e dados de demonstracao.
 
-Para simular a aprovação do pagamento durante testes locais, configure `SIMULAR_PAGAMENTO=true` no `.env` e reinicie o servidor. O pedido será marcado como pago e o estoque dos produtos será atualizado, sem chamar o Asaas. A simulação é desativada automaticamente quando `NODE_ENV=production`.
+   ```sql
+   CREATE DATABASE estoffe CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   ```
 
-Para voltar ao pagamento real, remova a variável ou defina `SIMULAR_PAGAMENTO=false` e reinicie o servidor.
+   Depois importe o arquivo usando seu cliente MySQL, por exemplo `mysql -u usuario -p estoffe < estoffe.sql`.
 
-## Produção, coletas e entregas
+3. Crie um arquivo `.env` na raiz do projeto. Exemplo:
 
-O painel administrativo em `/admin/producao` permite atribuir pedidos em produção a um estofador, acompanhar a carga por funcionário e agendar datas de coleta e entrega. O cliente recebe e-mail quando as datas são salvas e quando o status do pedido muda. Para o envio funcionar, configure `EMAIL_USER` e `EMAIL_PASS` no `.env`; falhas de envio são informadas no painel e registradas no log.
+   ```dotenv
+   PORT=3005
+   NODE_ENV=development
+   DB_HOST=localhost
+   DB_USER=seu_usuario
+   DB_PASSWORD=sua_senha
+   DB_NAME=estoffe
+   JWT_SECRET=gere-um-segredo-aleatorio-longo
+   SESSION_SECRET=gere-outro-segredo-aleatorio-longo
 
-Em bases existentes, as colunas de agendamento são criadas automaticamente na inicialização. A migração correspondente está em `migrations/20261023_agendamento_producao.sql`; em instalações novas, as colunas também estão na estrutura de `estoffe.sql`.
+   # Opcionais: e-mail, IA, pagamentos e login Google
+   EMAIL_USER=
+   EMAIL_PASS=
+   EMAIL_ADMIN=
+   APP_URL=http://localhost:3005
+   GEMINI_API_KEY=
+   GEMINI_MODEL=gemini-2.5-flash
+   ASAAS_TOKEN=
+   ASAAS_WEBHOOK_TOKEN=
+   GOOGLE_CLIENT_ID=
+   GOOGLE_CLIENT_SECRET=
+   GOOGLE_CALLBACK_URL=http://localhost:3005/auth/google/callback
+   ```
 
-## Assistente de orçamentos
+   `JWT_SECRET` e obrigatoria para iniciar o servidor. Configure tambem um `SESSION_SECRET` forte, especialmente em producao. Credenciais e chaves devem ficar somente no `.env`, nunca no codigo ou em commits.
 
-Configure `GEMINI_API_KEY` no `.env` para habilitar a geração de rascunhos no detalhe de um orçamento administrativo. Opcionalmente, defina `GEMINI_MODEL`; o padrão é `gemini-2.5-flash`. A IA recebe somente itens, quantidades, detalhes do pedido e valores propostos, sem nome, e-mail ou código do cliente. O rascunho é editável e nunca é enviado sem revisão do administrador.
+4. Inicie o servidor:
 
-O sistema calcula o custo conhecido dos materiais a partir da composição dos produtos e de `material.custo`; se faltarem composições ou custos cadastrados, a estimativa é identificada como parcial. O frete pré-verificado por CEP no carrinho é salvo junto ao pedido, exibido na lista e na análise administrativa, e enviado à IA como estimativa de referência. O administrador informa mão de obra/margem e confirma ou ajusta o frete; o total enviado é calculado com base nos itens + mão de obra/margem + frete. O cliente recebe a prévia por e-mail e também pode consultá-la no painel; o valor final é comunicado no orçamento. A configuração `GEMINI_MODEL` aceita o identificador do modelo (por exemplo, `gemini-2.5-flash`); o prefixo opcional `models/` é removido. Se o modelo configurado não estiver disponível ou só aceitar áudio, a aplicação consulta os modelos habilitados para a chave, ignora modelos de áudio/TTS e tenta até 10 alternativas de texto que suportem `generateContent`. Se a consulta falhar, verifique `GEMINI_API_KEY` e o acesso à Gemini API no Google AI Studio.
+   ```sh
+   npm run dev
+   ```
 
-Em bases existentes, a inicialização prepara as novas colunas automaticamente; as migrações relacionadas estão em `migrations/20261023_orcamento_ia.sql` e `migrations/20261023_previsao_frete.sql`.
+   Abra `http://localhost:3005`. Para iniciar sem o reinicio automatico do Nodemon, use `npm start`.
 
----
+Ao iniciar, a aplicacao verifica e prepara tabelas/colunas auxiliares para estoque, promocoes, agenda, notificacoes e fotos de acompanhamento. As migracoes SQL correspondentes ficam em `migrations/`; em instalacoes novas, confira tambem `estoffe.sql`.
 
-## 🧑‍💻 Autores
+## Como usar
 
-* **Yohan Dias Eduardo** - [yohan-dias-eduardo](https://www.linkedin.com/in/yohan-dias-eduardo-7a2ab0325/) / [diaseduardoyo@gmail.com](mailto:diaseduardoyo@gmail.com)
-* **Rayssa da Silva Maciel** - [rayssamaciel234@gmail.com](mailto:rayssamaciel234@gmail.com)
+### Visitante e cliente
+
+1. Acesse **Produtos** para navegar pelo catalogo; produtos sob medida ficam na pagina correspondente.
+2. Crie uma conta ou entre pelo menu **Login**. O carrinho permite revisar os itens, quantidades e frete estimado antes de enviar o pedido.
+3. Acesse **Meu Perfil** para atualizar seus dados e **Meus pedidos** no painel para acompanhar orcamentos, pagamentos, agendamentos e status.
+4. Quando uma proposta estiver disponivel, revise os valores e a mensagem e escolha aprovar ou recusar. O pagamento so e iniciado depois da aprovacao.
+5. Abra **Notificacoes** para consultar ofertas, avisos de status e novas fotos publicadas pela oficina. As fotos de cada pedido tambem aparecem no painel de acompanhamento.
+
+O fluxo de pedido sob medida pode ser iniciado na pagina de orcamento. O cliente informa os detalhes e a equipe avalia a solicitacao no painel administrativo.
+
+### Administrador
+
+- **Painel** (`/admin-dashboard`): veja pedidos, atribua pedidos pagos a um estofador e divulgue uma oferta. A oferta enviada aparece na central de notificacoes de todos os usuarios cadastrados.
+- **Orcamentos** (`/admin/orcamentos`): abra um pedido para conferir cliente, itens, imagens, observacoes, materiais e valores; preencha mao de obra e frete, edite a mensagem e envie a proposta.
+- **IA para orcamentos**: na analise do pedido, use o assistente para gerar um rascunho. Revise e edite o texto antes de enviar; a IA nao envia propostas nem define valores.
+- **Produtos** (`/admin/produtos`): cadastre/edite produtos, imagens, composicao de materiais, estoque e promocoes.
+- **Descricao com IA**: no formulario do produto, selecione a categoria, informe nome e, se desejar, detalhes confirmados. Clique em **Sugerir com IA**, revise a sugestao e salve normalmente. A sugestao e opcional e editavel; a IA nao substitui a revisao do administrador.
+- **Producao** (`/admin/producao`): acompanhe pedidos ativos, atribua ou altere o responsavel e salve datas de coleta e entrega.
+- **Estoque** (`/admin/estoque`) e **Estofadores** (`/admin/estofadores`): gerencie materiais, produtos acabados e equipe.
+- **Notificacoes**: consulte os avisos da propria conta. A divulgacao de ofertas e feita pelo formulario do painel.
+
+### Estofador
+
+1. Entre com uma conta do tipo estofador e abra **Painel do Estofador**.
+2. Selecione **Detalhes** no pedido atribuido para conferir os produtos, quantidades, observacoes e materiais previstos.
+3. Durante o status **Em Producao**, use **Fotos do andamento** para tirar uma foto pelo celular ou selecionar uma imagem JPEG, PNG ou WebP (ate 5 MB). Adicione uma legenda opcional e publique. A imagem fica disponivel no acompanhamento do cliente e gera uma notificacao.
+4. Registre materiais adicionais durante a producao e marque o servico como pronto quando finalizado.
+
+As notificacoes da conta tambem podem ser acessadas pelo link **Notificacoes** no painel.
+
+## Integracoes opcionais
+
+### Gemini
+
+Defina `GEMINI_API_KEY` para habilitar as sugestoes de descricao de produto e os rascunhos de orcamento. `GEMINI_MODEL` e opcional; o padrao e `gemini-2.5-flash`. Se a chave nao estiver configurada, os formularios continuam utilizaveis sem IA. O administrador deve sempre validar as sugestoes antes de salvar ou enviar.
+
+No orcamento, a aplicacao estima materiais conhecidos a partir da composicao cadastrada e dos custos de material; custos ou composicoes ausentes tornam a estimativa parcial. O frete consultado no carrinho e uma referencia, que o administrador pode confirmar ou ajustar. O total da proposta combina itens, mao de obra/margem e frete, e o cliente recebe uma previa por e-mail e no painel. Em bases existentes, as colunas de orcamento e frete sao preparadas na inicializacao; as alteracoes tambem estao em `migrations/20261023_orcamento_ia.sql` e `migrations/20261023_previsao_frete.sql`.
+
+### E-mail
+
+Configure `EMAIL_USER` e `EMAIL_PASS` para e-mails de pedidos, orcamentos e agendamentos. `EMAIL_ADMIN` define o destinatario administrativo dos formularios; se omitido, a aplicacao usa o endereco configurado como padrao no codigo. Falhas de e-mail sao registradas no log; avisos importantes tambem ficam na central de notificacoes.
+
+### Pagamentos
+
+Para pagamentos reais, configure `ASAAS_TOKEN` e os dados de webhook (`ASAAS_WEBHOOK_TOKEN`) conforme a integracao Asaas. Para testes locais sem cobranca, defina `SIMULAR_PAGAMENTO=true`; isso aprova o pagamento localmente e atualiza o estoque sem chamar o Asaas. A simulacao e ignorada automaticamente quando `NODE_ENV=production`.
+
+### Login Google
+
+O login Google e opcional e depende de `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `GOOGLE_CALLBACK_URL` configurados no Google Cloud Console. Cadastre a URL de callback exatamente igual a configurada no ambiente.
+
+## Imagens de producao e privacidade
+
+As fotos de acompanhamento ficam em `BackEnd/uploads`, fora da pasta publica. O estofador so pode publicar fotos em pedidos atribuidos a ele que estejam em producao; a visualizacao valida a sessao e o acesso ao pedido. O cliente ve as imagens somente no proprio painel.
+
+## Estrutura do projeto
+
+- `server.js`: configuracao do Express, sessao, CSRF, uploads e montagem de rotas.
+- `BackEnd/src/routes/`: fluxos de cliente, administrador, estofador e notificacoes.
+- `BackEnd/src/config/`: conexao MySQL, autenticacao, e-mail e login social.
+- `BackEnd/src/services/`: servicos compartilhados, como notificacoes.
+- `FrontEnd/pages/`: paginas EJS da loja e dos paineis.
+- `FrontEnd/image/`: imagens de produtos e arquivos visuais.
+- `migrations/`: alteracoes incrementais do banco.
+
+## Testes e verificacoes
+
+O projeto ainda nao define um script de testes no `package.json`. Para verificar a sintaxe do servidor e das rotas:
+
+```sh
+node --check server.js
+node --check BackEnd/src/config/database.js
+node --check BackEnd/src/routes/AdminRoutes.js
+node --check BackEnd/src/routes/NotificacaoRoutes.js
+```
+
+## Autores
+
+- Yohan Dias Eduardo - [LinkedIn](https://www.linkedin.com/in/yohan-dias-eduardo-7a2ab0325/)
+- Rayssa da Silva Maciel

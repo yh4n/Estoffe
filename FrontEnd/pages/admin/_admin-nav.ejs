@@ -1,0 +1,87 @@
+<header class="sticky top-0 z-40 border-b border-white/10 bg-green-950 text-white shadow-lg shadow-green-950/10">
+    <% const caminhoAdmin = typeof currentPath !== 'undefined' ? currentPath : ''; %>
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <a href="/admin-dashboard" class="flex shrink-0 items-center gap-3" aria-label="Estoffe, painel administrativo">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-xl text-amber-300">
+                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="block text-sm font-bold tracking-[0.14em]">ESTOFFE</span>
+                <span class="block text-[10px] font-semibold uppercase tracking-[0.2em] text-green-200">Administração</span>
+            </span>
+        </a>
+
+        <button id="admin-menu-button" type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 text-lg text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-amber-300 md:hidden"
+            aria-label="Abrir menu administrativo" aria-controls="admin-menu" aria-expanded="false">
+            <i class="bi bi-list" aria-hidden="true"></i>
+        </button>
+
+        <nav id="admin-menu" class="hidden w-full md:block md:w-auto">
+            <ul class="flex flex-col gap-1 border-t border-white/10 pt-3 text-sm font-medium md:flex-row md:items-center md:gap-1 md:border-0 md:pt-0">
+                <li>
+                    <a href="/admin-dashboard" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/admin-dashboard' ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/admin-dashboard') { %>aria-current="page"<% } %>>
+                        <i class="bi bi-speedometer2" aria-hidden="true"></i><span>Painel</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/orcamentos" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/admin/orcamentos' || caminhoAdmin.includes('/admin/pedido/') ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/admin/orcamentos' || caminhoAdmin.includes('/admin/pedido/')) { %>aria-current="page"<% } %>>
+                        <i class="bi bi-receipt" aria-hidden="true"></i><span>Orçamentos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/producao" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/admin/producao' || caminhoAdmin.startsWith('/admin/estofador-') ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/admin/producao' || caminhoAdmin.startsWith('/admin/estofador-')) { %>aria-current="page"<% } %>>
+                        <i class="bi bi-tools" aria-hidden="true"></i><span>Produção</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/produtos" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin.startsWith('/admin/produtos') ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin.startsWith('/admin/produtos')) { %>aria-current="page"<% } %>>
+                        <i class="bi bi-shop" aria-hidden="true"></i><span>Produtos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/estoque" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/admin/estoque' ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/admin/estoque') { %>aria-current="page"<% } %>>
+                        <i class="bi bi-box-seam" aria-hidden="true"></i><span>Estoque</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/admin/estofadores" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/admin/estofadores' || caminhoAdmin.startsWith('/admin/estofador/') ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/admin/estofadores' || caminhoAdmin.startsWith('/admin/estofador/')) { %>aria-current="page"<% } %>>
+                        <i class="bi bi-people" aria-hidden="true"></i><span>Equipe</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/notificacoes" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/notificacoes') { %>aria-current="page"<% } %>>
+                        <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+                    </a>
+                </li>
+                <li class="pt-2 md:pt-0">
+                    <a href="/logout" class="flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-green-100 transition hover:border-red-200/30 hover:bg-red-500/10 hover:text-white md:ml-1">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<script>
+    const adminMenuButton = document.getElementById('admin-menu-button');
+    const adminMenu = document.getElementById('admin-menu');
+    if (adminMenuButton && adminMenu) {
+        adminMenuButton.addEventListener('click', () => {
+            const aberto = adminMenuButton.getAttribute('aria-expanded') !== 'true';
+            adminMenuButton.setAttribute('aria-expanded', String(aberto));
+            adminMenuButton.setAttribute('aria-label', aberto ? 'Fechar menu administrativo' : 'Abrir menu administrativo');
+            adminMenuButton.innerHTML = `<i class="bi ${aberto ? 'bi-x-lg' : 'bi-list'}" aria-hidden="true"></i>`;
+            adminMenu.classList.toggle('hidden', !aberto);
+        });
+        adminMenu.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                adminMenuButton.setAttribute('aria-expanded', 'false');
+                adminMenuButton.setAttribute('aria-label', 'Abrir menu administrativo');
+                adminMenuButton.innerHTML = '<i class="bi bi-list" aria-hidden="true"></i>';
+                adminMenu.classList.add('hidden');
+            });
+        });
+    }
+</script>

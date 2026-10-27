@@ -10,32 +10,22 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-stone-50 text-gray-800 antialiased">
+  <%- include('_admin-nav') %>
 
-  <nav class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <span class="text-xl font-bold tracking-wider">ESTOFFE ADMIN</span>
-      <span class="bg-red-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">Gerente</span>
-    </div>
-    <a href="/admin-dashboard"
-      class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
-      <i class="bi bi-speedometer2"></i> Voltar ao Painel
-    </a>
-  </nav>
-
-  <main class="p-6 md:p-12 max-w-7xl mx-auto">
+  <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Novos Orçamentos</h1>
-      <p class="text-gray-600 mt-1">Prepare propostas, acompanhe as respostas e consulte o status dos orçamentos.
-      </p>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-green-800">Comercial</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Orçamentos</h1>
+      <p class="mt-2 text-gray-600">Prepare propostas e acompanhe as respostas dos clientes.</p>
     </div>
     <% if (notificacao === 'enviada') { %>
       <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-        Orçamento enviado ao cliente.
+        Orçamento enviado. O cliente recebeu um aviso por e-mail ou pela central de notificações do app.
       </div>
     <% } else if (notificacao === 'erro') { %>
       <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        O orçamento foi salvo, mas o e-mail não foi enviado. Confira o cadastro do cliente e a configuração SMTP.
+        O orçamento foi salvo, mas os avisos ao cliente não foram concluídos. Confira o cadastro e a configuração de e-mail.
       </div>
     <% } %>
 

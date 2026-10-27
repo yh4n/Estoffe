@@ -10,30 +10,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body class="bg-gray-50 font-sans min-h-screen flex flex-col">
+<body class="min-h-screen bg-stone-50 font-sans text-gray-800 antialiased">
+    <%- include('_admin-nav') %>
 
-    <header class="bg-green-950 text-white px-4 py-3 flex flex-col gap-3 shadow-md sm:px-6 sm:py-4 sm:flex-row sm:justify-between sm:items-center">
-        <div class="flex items-center gap-3">
-            <span class="font-bold tracking-wider text-lg">ESTOFFE ADMIN</span>
-            <span class="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-sm">Gerente</span>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:justify-end sm:gap-4">
-            <a href="/admin/produtos" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
-                <i class="bi bi-box-seam" aria-hidden="true"></i> Gerenciar produtos
-            </a>
-            <a href="/admin-dashboard" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
-                <i class="bi bi-speedometer2" aria-hidden="true"></i> Painel
-            </a>
-        </div>
-    </header>
-
-    <main class="flex-grow flex items-center justify-center py-6 px-3 sm:py-12 sm:px-4">
-        <div class="bg-white rounded-sm border border-gray-100 shadow-xl max-w-lg w-full min-w-0 p-4 sm:p-8">
+    <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div class="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div class="border-b border-gray-100 bg-green-950 px-5 py-5 text-white sm:px-8">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">Catálogo</p>
+            <h1 class="mt-2 text-2xl font-bold sm:text-3xl"><%= modoEdicao ? 'Editar produto' : 'Cadastrar produto' %></h1>
+            <p class="mt-1 text-sm text-green-100">Preencha as informações que serão exibidas aos clientes.</p>
+          </div>
+          <div class="p-5 sm:p-8">
 
             <div class="mb-6">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-900"><%= modoEdicao ? 'Editar Produto' : 'Cadastrar Novo Produto' %></h2>
-                <p class="text-sm text-gray-500 mt-1">Insira os detalhes da nova peça de alto padrão para o catálogo.
-                </p>
+                <p class="text-sm text-gray-500">Detalhes do produto, preço, estoque e imagens.</p>
             </div>
 
             <form id="form-produto" action="<%= modoEdicao ? `/admin/produtos/${produto.codProduto}/editar` : '/admin/produtos/salvar' %>" method="POST" enctype="multipart/form-data" class="space-y-5" novalidate>
@@ -80,9 +70,19 @@
                 </div>
 
                 <div>
-                    <label for="descricao" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Descrição breve</label>
+                    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+                        <label for="descricao" class="block text-xs font-bold uppercase tracking-wider text-gray-700">Descrição breve</label>
+                        <button type="button" id="gerar-descricao-ia"
+                            class="inline-flex min-h-9 items-center gap-2 rounded-sm bg-green-50 px-3 text-xs font-semibold text-green-900 hover:bg-green-100 disabled:cursor-wait disabled:opacity-60">
+                            <i class="bi bi-stars" aria-hidden="true"></i> Sugerir com IA
+                        </button>
+                    </div>
                     <textarea id="descricao" name="descricao" rows="3" maxlength="255" placeholder="Ex: Sofá moderno em linho com acabamento premium."
                         class="campo-form w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition"><%= modoEdicao && produto.descricao ? produto.descricao : '' %></textarea>
+                    <label for="detalhes-ia" class="mt-3 block text-xs font-semibold text-gray-600">Detalhes confirmados para orientar a IA (opcional)</label>
+                    <input type="text" id="detalhes-ia" maxlength="500" placeholder="Ex.: tecido escolhido, dimensões, cor..."
+                        class="mt-1 w-full border border-gray-200 px-4 py-2.5 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
+                    <p id="descricao-ia-feedback" class="mt-2 text-xs text-gray-500" aria-live="polite"></p>
                 </div>
 
                 <div class="flex items-center gap-3 rounded-sm border border-gray-200 bg-gray-50 px-4 py-3">
@@ -186,8 +186,43 @@
         const campoEstoque = document.getElementById('quantidadeEstoque');
         const campoPreco = document.getElementById('preco');
         const botaoSubmit = document.getElementById('submit-produto');
+        const botaoDescricaoIa = document.getElementById('gerar-descricao-ia');
+        const feedbackDescricaoIa = document.getElementById('descricao-ia-feedback');
         const PRECO_APROXIMADO_SOB_MEDIDA = 1500;
         let urlImagemPreview;
+
+        botaoDescricaoIa.addEventListener('click', async () => {
+            feedbackDescricaoIa.textContent = '';
+            botaoDescricaoIa.disabled = true;
+            botaoDescricaoIa.innerHTML = '<i class="bi bi-arrow-repeat animate-spin" aria-hidden="true"></i> Gerando...';
+            try {
+                const resposta = await fetch('/admin/produtos/descricao-ia', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('[name="_csrf"]').value
+                    },
+                    body: JSON.stringify({
+                        nome: document.getElementById('nome').value,
+                        codCategoria: document.getElementById('codCategoria').value,
+                        detalhes: document.getElementById('detalhes-ia').value
+                    })
+                });
+                const dados = resposta.headers.get('content-type')?.includes('application/json')
+                    ? await resposta.json()
+                    : {};
+                if (!resposta.ok) throw new Error(dados.erro || 'Não foi possível gerar a descrição.');
+                document.getElementById('descricao').value = dados.descricao;
+                feedbackDescricaoIa.textContent = 'Sugestão inserida. Revise e edite antes de salvar o produto.';
+                feedbackDescricaoIa.className = 'mt-2 text-xs text-green-800';
+            } catch (error) {
+                feedbackDescricaoIa.textContent = error.message;
+                feedbackDescricaoIa.className = 'mt-2 text-xs text-red-700';
+            } finally {
+                botaoDescricaoIa.disabled = false;
+                botaoDescricaoIa.innerHTML = '<i class="bi bi-stars" aria-hidden="true"></i> Sugerir com IA';
+            }
+        });
 
         const definirErro = (campo, mensagem) => {
             if (!campo) return;

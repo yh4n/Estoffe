@@ -69,8 +69,26 @@ const uploadImagemProduto = multer({
   { name: "imagem", maxCount: 1 },
   { name: "fotosGaleria", maxCount: 12 },
 ]);
+const uploadFotoAcompanhamento = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+}).single("foto");
 
 app.use((req, res, next) => {
+  const rotaFotoAcompanhamento =
+    req.method === "POST" &&
+    /^\/estofador\/pedido\/\d+\/fotos$/.test(req.path);
+  if (rotaFotoAcompanhamento && req.is("multipart/form-data")) {
+    return uploadFotoAcompanhamento(req, res, (error) => {
+      if (error) {
+        return res
+          .status(400)
+          .send("Envie uma foto JPEG, PNG ou WebP de até 5 MB.");
+      }
+      next();
+    });
+  }
+
   const rotaProduto =
     req.method === "POST" &&
     (req.path === "/admin/produtos/salvar" ||
@@ -329,6 +347,11 @@ const EstofadorRoutes = require(
   path.join(__dirname, "BackEnd", "src", "routes", "EstofadorRoutes"),
 );
 app.use("/", EstofadorRoutes);
+
+const NotificacaoRoutes = require(
+  path.join(__dirname, "BackEnd", "src", "routes", "NotificacaoRoutes"),
+);
+app.use("/", NotificacaoRoutes);
 
 const CarrinhoRoutes = require(
   path.join(__dirname, "BackEnd", "src", "routes", "CarrinhoRoutes.js"),

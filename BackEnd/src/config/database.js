@@ -237,16 +237,48 @@ async function prepararSchemaAgenda() {
     }
 }
 
+async function prepararSchemaNotificacoes() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS notificacao (
+            codNotificacao INT NOT NULL AUTO_INCREMENT,
+            codUsuario INT NOT NULL,
+            tipo VARCHAR(30) NOT NULL,
+            titulo VARCHAR(120) NOT NULL,
+            mensagem VARCHAR(1000) NOT NULL,
+            link VARCHAR(255) DEFAULT NULL,
+            codPedido INT DEFAULT NULL,
+            lida TINYINT(1) NOT NULL DEFAULT 0,
+            criadaEm TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (codNotificacao),
+            KEY idx_notificacao_usuario_lida (codUsuario, lida, criadaEm),
+            KEY idx_notificacao_pedido (codPedido)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS foto_acompanhamento (
+            codFoto INT NOT NULL AUTO_INCREMENT,
+            codPedido INT NOT NULL,
+            codEstofador INT NOT NULL,
+            caminhoImagem VARCHAR(255) NOT NULL,
+            legenda VARCHAR(255) DEFAULT NULL,
+            criadaEm TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (codFoto),
+            KEY idx_foto_acompanhamento_pedido (codPedido, criadaEm)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+    `);
+}
+
 pool.schemaPromocoesPronto = prepararSchemaPromocoes();
 pool.schemaEstoquePronto = prepararSchemaEstoque();
 pool.schemaAgendaPronto = pool.schemaEstoquePronto.then(prepararSchemaAgenda);
+pool.schemaNotificacoesPronto = pool.schemaAgendaPronto.then(prepararSchemaNotificacoes);
 
 pool.getConnection()
     .then(async (conn) => {
         console.log('Conexão com o banco MySQL realizada com sucesso!');
         conn.release();
-        await Promise.all([pool.schemaPromocoesPronto, pool.schemaEstoquePronto, pool.schemaAgendaPronto]);
-        console.log('Schemas de promoções, estoque e agenda verificados com sucesso.');
+        await Promise.all([pool.schemaPromocoesPronto, pool.schemaEstoquePronto, pool.schemaAgendaPronto, pool.schemaNotificacoesPronto]);
+        console.log('Schemas de promoções, estoque, agenda e notificações verificados com sucesso.');
     })
     .catch(err => {
         console.error('Erro crítico ao conectar com o banco de dados MySQL:', err.message);

@@ -10,20 +10,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-stone-50 text-gray-800 antialiased">
+  <%- include('_estofador-nav') %>
 
-  <nav class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <span class="text-xl font-bold tracking-wider">ESTOFFE Estofador</span>
-      <span class="bg-red-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">Estofador</span>
-    </div>
-    <a href="/estofador-dashboard"
-      class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
-      <i class="bi bi-box-arrow-right"></i>Voltar ao painel
-    </a>
-  </nav>
-
-  <main class="p-6 md:p-12 max-w-4xl mx-auto">
+  <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <% if (queryFotoSalva) { %>
+      <div role="status" class="mb-5 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        Foto publicada para o cliente.
+        <% if (queryNotificacaoErro) { %> A foto foi salva, mas o aviso no app não pôde ser criado.<% } else { %> O cliente foi avisado na central de notificações do app.<% } %>
+      </div>
+    <% } %>
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
 
       <div
@@ -43,6 +39,42 @@
           </span>
         </div>
       </div>
+
+      <section class="mt-6 border-t border-gray-100 pt-6">
+        <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">Fotos do andamento</h3>
+        <% if (pedido.status === 'Em Produção') { %>
+          <form action="/estofador/pedido/<%= pedido.codPedido %>/fotos" method="POST" enctype="multipart/form-data"
+            class="mb-5 grid gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="text-xs font-semibold text-gray-700">Tire ou escolha uma foto
+              <input required type="file" name="foto" accept="image/jpeg,image/png,image/webp" capture="environment"
+                class="mt-1 block w-full min-w-0 text-xs">
+            </label>
+            <label class="text-xs font-semibold text-gray-700">Legenda (opcional)
+              <input type="text" name="legenda" maxlength="255" placeholder="Ex.: Estrutura pronta para montagem"
+                class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm">
+            </label>
+            <button type="submit" class="rounded-xl bg-green-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-800">
+              <i class="bi bi-camera mr-1"></i>Publicar foto
+            </button>
+          </form>
+        <% } %>
+        <% if (pedido.fotosAcompanhamento && pedido.fotosAcompanhamento.length) { %>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <% pedido.fotosAcompanhamento.forEach(function(foto) { %>
+              <figure class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <img src="/pedido/<%= pedido.codPedido %>/fotos/<%= foto.codFoto %>" alt="<%= foto.legenda || `Andamento do pedido ${pedido.codPedido}` %>"
+                  class="aspect-square w-full object-cover">
+                <figcaption class="p-2 text-xs text-gray-600">
+                  <%= foto.legenda || 'Andamento da produção' %>
+                </figcaption>
+              </figure>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <p class="text-sm text-gray-500">Nenhuma foto publicada para este pedido.</p>
+        <% } %>
+      </section>
 
       <!-- Itens Solicitados -->
       <div class="mt-6 border-t border-gray-100 pt-6">

@@ -1647,7 +1647,7 @@ router.get(
     const usuarioLogado = req.session.usuario;
 
     try {
-      await db.schemaAgendaPronto;
+      await db.schemaNotificacoesPronto;
       const [clientes] = await db.query(
         "SELECT codCliente FROM cliente WHERE codUsuario = ?",
         [usuarioLogado.codUsuario],
@@ -1668,6 +1668,27 @@ router.get(
            ORDER BY p.dataPedido DESC, p.codPedido DESC`,
           [codCliente],
         );
+        pedidos.forEach((pedido) => {
+          pedido.fotosAcompanhamento = [];
+        });
+        if (pedidos.length) {
+          const codigosPedidos = pedidos.map((pedido) => pedido.codPedido);
+          const [fotos] = await db.query(
+            `SELECT codPedido, codFoto, caminhoImagem, legenda, criadaEm
+               FROM foto_acompanhamento
+              WHERE codPedido IN (?)
+              ORDER BY criadaEm DESC, codFoto DESC`,
+            [codigosPedidos],
+          );
+          const fotosPorPedido = new Map();
+          fotos.forEach((foto) => {
+            if (!fotosPorPedido.has(foto.codPedido)) fotosPorPedido.set(foto.codPedido, []);
+            fotosPorPedido.get(foto.codPedido).push(foto);
+          });
+          pedidos.forEach((pedido) => {
+            pedido.fotosAcompanhamento = fotosPorPedido.get(pedido.codPedido) || [];
+          });
+        }
       }
 
       res.render("client/client-dashboard", {

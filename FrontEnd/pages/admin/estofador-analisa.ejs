@@ -10,20 +10,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-stone-50 text-gray-800 antialiased">
+    <%- include('_admin-nav') %>
 
-    <nav class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center gap-3">
-            <span class="text-xl font-bold tracking-wider">ESTOFFE ADMIN</span>
-            <span class="bg-red-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide">Gerente</span>
-        </div>
-        <a href="/admin/estofadores"
-            class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
-            <i class="bi bi-arrow-left"></i> Voltar para Estofadores
-        </a>
-    </nav>
-
-    <main class="p-6 md:p-12 max-w-4xl mx-auto">
+    <main class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6 md:p-8">
 
             <div class="border-b border-gray-100 pb-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -87,17 +77,24 @@
                     <% if (pedido.itens && pedido.itens.length > 0) { %>
                         <div class="divide-y divide-gray-200">
                             <% pedido.itens.forEach(function(item) { %>
-                                <div class="py-4 flex justify-between items-center first:pt-0 last:pb-0">
-                                    <div class="space-y-1">
-                                        <p class="font-semibold text-gray-800 text-sm">
-                                            <%= item.nomeProduto %>
-                                        </p>
-                                        <p class="text-xs text-gray-600 bg-white inline-block px-2 py-1 rounded border border-gray-100">
-                                            <strong>Obs:</strong> <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
-                                        </p>
-                                        <p class="text-xs text-gray-400 block">
-                                            Preço Unitário: R$ <%= Number(item.precoUnitario).toFixed(2).replace('.', ',') %>
-                                        </p>
+                                <div class="py-4 flex flex-wrap justify-between gap-4 first:pt-0 last:pb-0">
+                                    <div class="flex min-w-0 items-start gap-3">
+                                        <% if (item.imagemProduto) { %>
+                                            <img src="<%= /^https?:\/\//i.test(item.imagemProduto) ? item.imagemProduto : '/' + item.imagemProduto.replace(/^\/+/, '') %>"
+                                                alt="<%= item.nomeProduto %>" class="h-20 w-20 shrink-0 rounded-md border border-gray-200 object-cover">
+                                        <% } %>
+                                        <div class="min-w-0 space-y-1">
+                                            <p class="font-semibold text-gray-800 text-sm"><%= item.nomeProduto %></p>
+                                            <% if (item.descricaoProduto) { %>
+                                                <p class="text-xs text-gray-600"><%= item.descricaoProduto %></p>
+                                            <% } %>
+                                            <p class="text-xs text-gray-600 bg-white inline-block px-2 py-1 rounded border border-gray-100">
+                                                <strong>Obs:</strong> <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
+                                            </p>
+                                            <p class="text-xs text-gray-400 block">
+                                                Preço Unitário: R$ <%= Number(item.precoUnitario).toFixed(2).replace('.', ',') %>
+                                            </p>
+                                        </div>
                                     </div>
                                     <div class="text-right space-y-1">
                                         <span class="inline-block text-xs font-bold bg-zinc-100 text-zinc-800 px-2.5 py-0.5 rounded-md border border-zinc-200">

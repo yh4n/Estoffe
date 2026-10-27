@@ -1,0 +1,28 @@
+<header class="sticky top-0 z-40 border-b border-white/10 bg-green-950 text-white shadow-lg shadow-green-950/10">
+    <% const caminhoOficina = typeof currentPath !== 'undefined' ? currentPath : ''; %>
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <a href="/estofador-dashboard" class="flex items-center gap-3" aria-label="Estoffe Oficina, painel de produção">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-xl text-amber-300">
+                <i class="bi bi-tools" aria-hidden="true"></i>
+            </span>
+            <span>
+                <span class="block text-sm font-bold tracking-[0.14em]">ESTOFFE</span>
+                <span class="block text-[10px] font-semibold uppercase tracking-[0.2em] text-green-200">Oficina</span>
+            </span>
+        </a>
+        <nav aria-label="Navegação da oficina">
+            <ul class="flex items-center gap-2 text-sm font-medium">
+                <li>
+                    <a href="/estofador-dashboard" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoOficina === '/estofador-dashboard' ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoOficina === '/estofador-dashboard') { %>aria-current="page"<% } %>>
+                        <i class="bi bi-grid-1x2" aria-hidden="true"></i><span class="hidden sm:inline">Meus trabalhos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout" class="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-green-100 transition hover:border-red-200/30 hover:bg-red-500/10 hover:text-white">
+                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>

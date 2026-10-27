@@ -11,46 +11,32 @@
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="bg-gray-100 font-sans">
+<body class="min-h-screen bg-stone-50 font-sans text-gray-800 antialiased">
+  <%- include('_admin-nav') %>
 
-  <header class="flex items-center justify-between p-4 bg-green-950 shadow-md text-white">
-    <div class="flex items-center gap-3">
-      <span class="text-xl font-bold tracking-wider uppercase">Estoffe Admin</span>
-      <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full font-semibold text-white">Gerente</span>
+  <main class="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-green-800">Central de gestão</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Visão geral do sistema</h1>
+      <p class="mt-2 text-gray-600">Pedidos, equipe, catálogo e produção reunidos em um só lugar.</p>
     </div>
-
-    <div class="flex items-center gap-4">
-      <a href="/admin/produtos/novo"
-        class="text-sm bg-green-700 hover:bg-green-600 px-4 py-2 rounded-md transition-colors duration-300 font-medium flex items-center gap-1">
-        <i class="bi bi-plus-circle"></i> Novo Produto
-      </a>
-
-      <a href="/admin/estoque"
-        class="text-sm bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-md transition-colors duration-300 font-medium flex items-center gap-1">
-        <i class="bi bi-box-seam"></i> Estoque
-      </a>
-
-      <a href="/logout" class="text-sm bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors duration-300">
-        <i class="bi bi-box-arrow-right mr-1"></i> Sair
-      </a>
-    </div>
-  </header>
-
-  <main class="p-6 md:p-12 max-w-7xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Visão Geral do Sistema</h1>
-    <p class="text-gray-600 mb-8">Gerenciamento de pedidos, estofadores e relatórios de produção.</p>
 
     <% if (notificacao === 'enviada') { %>
       <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-        Status atualizado e notificação enviada ao cliente.
+        Status atualizado. O cliente recebeu um aviso por e-mail ou pela central de notificações do app.
       </div>
     <% } else if (notificacao === 'erro') { %>
       <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        O status foi salvo, mas não foi possível enviar o e-mail ao cliente. Confira o cadastro e a configuração SMTP.
+        O status foi salvo, mas os avisos ao cliente não foram concluídos. Confira o cadastro e a configuração de e-mail.
+      </div>
+    <% } %>
+    <% if (queryOfertaEnviada) { %>
+      <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        Oferta divulgada para <%= destinatariosOferta %> cliente(s) na central do app.
       </div>
     <% } %>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <a href="/admin/orcamentos"
         class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between hover:border-green-500 hover:shadow-md transition-all duration-200 group cursor-pointer">
         <div>
@@ -94,11 +80,31 @@
       </a>
     </div>
 
+    <section class="mb-8 rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
+      <h2 class="font-bold text-gray-800"><i class="bi bi-megaphone mr-2 text-amber-700"></i>Divulgar uma oferta</h2>
+      <p class="mt-1 text-sm text-gray-600">A oferta aparece na central do app dos clientes, junto das atualizações e novidades da loja.</p>
+      <form action="/admin/notificacoes/oferta" method="POST" class="mt-4 grid gap-3 md:grid-cols-[minmax(12rem,1fr)_2fr_auto] md:items-end">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label class="text-xs font-semibold text-gray-600">Título
+          <input required maxlength="120" name="titulo" placeholder="Ex.: Novidades Estoffe"
+            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+        </label>
+        <label class="text-xs font-semibold text-gray-600">Mensagem da oferta
+          <textarea required maxlength="1000" name="mensagem" rows="2" placeholder="Conte aos clientes sobre a oferta..."
+            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+          </textarea>
+        </label>
+        <button type="submit" class="rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600">
+          <i class="bi bi-send mr-1" aria-hidden="true"></i>Divulgar oferta
+        </button>
+      </form>
+    </section>
+
 
     <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
       <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <h3 class="font-bold text-gray-700">Pagamentos aprovados aguardando atribuição</h3>
-        <span class="text-sm font-semibold text-gray-500"><%= pedidosPagos.length %></span>
+        <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-900"><%= pedidosPagos.length %></span>
       </div>
       <div class="p-6 overflow-x-auto">
         <table class="w-full text-left border-collapse">

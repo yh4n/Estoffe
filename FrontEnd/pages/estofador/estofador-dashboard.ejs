@@ -10,34 +10,24 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen bg-stone-50 text-gray-800 antialiased">
+  <%- include('_estofador-nav') %>
 
-  <nav class="bg-zinc-800 text-white px-6 py-4 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <span class="text-xl font-bold tracking-wider uppercase">Estoffe Oficina</span>
-      <span
-        class="bg-amber-500 text-xs px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wide text-zinc-950">Oficina</span>
-    </div>
-    <a href="/login"
-      class="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium">
-      <i class="bi bi-box-arrow-right"></i> Sair do Sistema
-    </a>
-  </nav>
-
-  <main class="p-6 md:p-12 max-w-7xl mx-auto">
+  <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
 
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Olá, <%= usuario.nome %>!</h1>
-      <p class="text-gray-600 mt-1">Visão geral da sua área de trabalho, controle de produção e serviços atribuídos.</p>
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-green-800">Painel da oficina</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Olá, <%= usuario.nome %>!</h1>
+      <p class="mt-2 text-gray-600">Acompanhe seus trabalhos e atualize cada ordem de serviço.</p>
     </div>
 
     <% if (notificacao === 'enviada') { %>
       <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-        Pedido atualizado e notificação enviada ao cliente.
+        Pedido atualizado. O cliente recebeu um aviso por e-mail ou pela central de notificações do app.
       </div>
     <% } else if (notificacao === 'erro') { %>
       <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-        O pedido foi atualizado, mas não foi possível enviar o e-mail ao cliente. A equipe administrativa foi informada.
+        O pedido foi atualizado, mas os avisos ao cliente não foram concluídos. Avise a equipe administrativa.
       </div>
     <% } %>
 
@@ -81,10 +71,10 @@
 
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/70">
         <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="bi bi-list-task text-zinc-700"></i>
-          Histórico da sua Área</h3>
+          Seus trabalhos</h3>
       </div>
 
       <div class="p-6 overflow-x-auto">
