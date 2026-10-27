@@ -2,6 +2,7 @@
 <html lang="pt-br">
 
 <head>
+    <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estoffe Admin - Novo Produto</title>
@@ -11,80 +12,418 @@
 
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col">
 
-    <header class="bg-green-950 text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <header class="bg-green-950 text-white px-4 py-3 flex flex-col gap-3 shadow-md sm:px-6 sm:py-4 sm:flex-row sm:justify-between sm:items-center">
         <div class="flex items-center gap-3">
             <span class="font-bold tracking-wider text-lg">ESTOFFE ADMIN</span>
             <span class="bg-red-500 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-sm">Gerente</span>
         </div>
-        <a href="/produtos" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
-            <i class="bi bi-speedometer2"></i> Voltar ao Painel
-        </a>
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:justify-end sm:gap-4">
+            <a href="/admin/produtos" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
+                <i class="bi bi-box-seam" aria-hidden="true"></i> Gerenciar produtos
+            </a>
+            <a href="/admin-dashboard" class="text-sm text-gray-300 hover:text-white transition flex items-center gap-1">
+                <i class="bi bi-speedometer2" aria-hidden="true"></i> Painel
+            </a>
+        </div>
     </header>
 
-    <main class="flex-grow flex items-center justify-center py-12 px-4">
-        <div class="bg-white rounded-sm border border-gray-100 shadow-xl max-w-lg w-full p-8">
+    <main class="flex-grow flex items-center justify-center py-6 px-3 sm:py-12 sm:px-4">
+        <div class="bg-white rounded-sm border border-gray-100 shadow-xl max-w-lg w-full min-w-0 p-4 sm:p-8">
 
             <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Cadastrar Novo Produto</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-900"><%= modoEdicao ? 'Editar Produto' : 'Cadastrar Novo Produto' %></h2>
                 <p class="text-sm text-gray-500 mt-1">Insira os detalhes da nova peça de alto padrão para o catálogo.
                 </p>
             </div>
 
-            <form action="/admin/produtos/salvar" method="POST" class="space-y-5">
+            <form id="form-produto" action="<%= modoEdicao ? `/admin/produtos/${produto.codProduto}/editar` : '/admin/produtos/salvar' %>" method="POST" enctype="multipart/form-data" class="space-y-5" novalidate>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                <div id="form-feedback" class="hidden rounded-sm border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="polite"></div>
 
                 <div>
-                    <label for="nome" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Nome
-                        do Produto</label>
+                    <label for="nome" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Nome do Produto</label>
                     <input type="text" id="nome" name="nome" required placeholder="Ex: Sofá Chesterfield Linho"
-                        class="w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
+                        value="<%= modoEdicao ? produto.nome : '' %>"
+                        class="campo-form w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="preco"
-                            class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Preço
-                            (R$)</label>
-                        <input type="number" id="preco" name="preco" step="0.01" required placeholder="0.00"
-                            class="w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
+                        <label for="preco" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Preço (R$)</label>
+                        <input type="number" id="preco" name="preco" step="0.01" min="0.01" required placeholder="0.00"
+                            value="<%= modoEdicao ? produto.preco : '' %>"
+                            class="campo-form w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
                     </div>
 
                     <div>
-                        <label for="codCategoria"
-                            class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Categoria</label>
-                        <select id="codCategoria" name="codCategoria" required
-                            class="w-full bg-white border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
-                            <option value="" disabled selected>Selecione...</option>
-
-                            <% categorias.forEach(categoria=> { %>
-                                <option value="<%= categoria.codCategoria %>">
-                                    <%= categoria.nome %>
-                                </option>
-                                <% }) %>
-
-                        </select>
+                        <label for="quantidadeEstoque" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Estoque</label>
+                        <input type="number" id="quantidadeEstoque" name="quantidadeEstoque" min="0" step="1" required
+                            value="<%= modoEdicao ? (produto.quantidadeEstoque ?? 0) : 0 %>"
+                            class="campo-form w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition <%= modoEdicao && produto.sob_medida ? 'bg-gray-100 text-gray-500' : '' %>"
+                            <%= modoEdicao && produto.sob_medida ? 'disabled' : '' %>>
                     </div>
                 </div>
 
                 <div>
-                    <label for="imagem"
-                        class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Caminho da
-                        Imagem</label>
-                    <input type="text" id="imagem" name="imagem" placeholder="Ex: image/sofa-novo.jpg"
-                        class="w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
-                    <p class="text-[11px] text-gray-400 mt-1">Insira a pasta e o nome do arquivo salvo no seu projeto.
-                    </p>
+                    <label for="codCategoria" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Categoria</label>
+                    <select id="codCategoria" name="codCategoria" required
+                        class="campo-form w-full bg-white border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition">
+                        <option value="" disabled selected>Selecione...</option>
+
+                        <% categorias.forEach(categoria=> { %>
+                            <option value="<%= categoria.codCategoria %>" <%= modoEdicao && produto.codCategoria == categoria.codCategoria ? 'selected' : '' %>>
+                                <%= categoria.nome %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="descricao" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Descrição breve</label>
+                    <textarea id="descricao" name="descricao" rows="3" maxlength="255" placeholder="Ex: Sofá moderno em linho com acabamento premium."
+                        class="campo-form w-full border border-gray-200 px-4 py-3 rounded-sm text-sm focus:outline-none focus:border-green-800 transition"><%= modoEdicao && produto.descricao ? produto.descricao : '' %></textarea>
+                </div>
+
+                <div class="flex items-center gap-3 rounded-sm border border-gray-200 bg-gray-50 px-4 py-3">
+                    <input type="checkbox" id="sobMedida" name="sobMedida" <%= modoEdicao && produto.sob_medida ? 'checked' : '' %> class="h-4 w-4 accent-green-900">
+                    <label for="sobMedida" class="text-sm font-semibold text-gray-700">Produto sob medida / sem estoque</label>
+                </div>
+
+                <div>
+                    <label for="imagem" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Imagem principal</label>
+                    <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/png,image/webp"
+                        class="campo-form block w-full min-w-0 border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-4 sm:py-3 sm:text-sm file:mr-2 file:border-0 file:bg-gray-100 file:px-2 file:py-2 file:text-xs file:font-semibold file:text-gray-700 sm:file:mr-3 sm:file:px-3 focus:outline-none focus:border-green-800 transition">
+                    <p class="text-[11px] text-gray-400 mt-1">JPEG, PNG ou WebP. Máximo de 5 MB. Ao editar, deixe vazio para manter a imagem atual.</p>
+                    <div id="imagem-preview-container" class="<%= modoEdicao && produto.imagem ? '' : 'hidden' %> mt-3">
+                        <img id="imagem-preview" src="<%= modoEdicao && produto.imagem ? (/^https?:\/\//i.test(produto.imagem) ? produto.imagem : '/' + produto.imagem.replace(/^\/+/, '')) : '' %>"
+                            alt="Imagem atual do produto" class="h-24 w-32 object-cover border border-gray-200">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="fotosGaleria" class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Fotos da galeria</label>
+                    <input type="file" id="fotosGaleria" name="fotosGaleria" accept="image/jpeg,image/png,image/webp" multiple
+                        class="campo-form block w-full min-w-0 border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-4 sm:py-3 sm:text-sm file:mr-2 file:border-0 file:bg-gray-100 file:px-2 file:py-2 file:text-xs file:font-semibold file:text-gray-700 sm:file:mr-3 sm:file:px-3 focus:outline-none focus:border-green-800 transition">
+                    <p class="text-[11px] text-gray-400 mt-1">Selecione várias fotos de uma vez. JPEG, PNG ou WebP, até 5 MB cada e 12 fotos por envio. Clique no X da prévia para retirar uma foto selecionada antes de salvar.</p>
+                    <div id="galeria-preview" class="mt-3 flex flex-wrap gap-2"></div>
+                    <% if (modoEdicao && produto.galeria_imagens) { %>
+                        <input type="hidden" id="galeria-imagens-existentes" name="galeriaImagens"
+                            value="<%= produto.galeria_imagens.split(';').map(imagem => imagem.trim()).filter(Boolean).join(';') %>">
+                        <div id="galeria-atual" class="mt-3 flex flex-wrap gap-3">
+                            <% produto.galeria_imagens.split(';').map(imagem => imagem.trim()).filter(Boolean).forEach((imagem, index) => { %>
+                                <div class="relative">
+                                    <img src="<%= /^https?:\/\//i.test(imagem) ? imagem : '/' + imagem.replace(/^\/+/, '') %>"
+                                        alt="Foto atual da galeria <%= index + 1 %>" class="h-16 w-16 object-cover border border-gray-200">
+                                    <button type="button" data-remover-foto-galeria
+                                        class="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                        aria-label="Remover foto <%= index + 1 %> da galeria" title="Remover foto">
+                                        <i class="bi bi-x-lg text-xs" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+
+                <div class="border-t border-gray-100 pt-5">
+                    <div class="flex flex-col items-start gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700">Materiais usados</label>
+                            <p class="text-[11px] text-gray-400 mt-1">Informe quanto de cada material será usado em uma unidade.</p>
+                        </div>
+                        <button type="button" id="adicionar-material" class="text-xs font-semibold text-green-900 hover:text-green-700 flex items-center gap-1 min-h-10">
+                            <i class="bi bi-plus-circle"></i> Adicionar
+                        </button>
+                    </div>
+                    <div id="materiais-produto" class="space-y-3">
+                        <% const linhasComposicao = modoEdicao && Array.isArray(composicao) && composicao.length ? composicao : [{}]; %>
+                        <% linhasComposicao.forEach((linha) => { %>
+                            <div class="material-row grid grid-cols-[minmax(0,1fr)_4rem_2.5rem] gap-2 sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:gap-3">
+                                <select name="materialId" class="campo-material w-full min-w-0 bg-white border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-3 sm:text-sm focus:outline-none focus:border-green-800">
+                                    <option value="">Nenhum material</option>
+                                    <% materiais.forEach(material=> { %>
+                                        <option value="<%= material.id %>" <%= linha.materialId == material.id ? 'selected' : '' %>>
+                                            <%= material.nome_material %> (<%= material.unidade_medida %>)
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <input type="number" name="quantidadeUsada" min="0.01" step="0.01" placeholder="Qtd." value="<%= linha.quantidadeUsada || '' %>"
+                                    class="campo-material w-full min-w-0 border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-3 sm:text-sm focus:outline-none focus:border-green-800">
+                                <button type="button" class="remover-material flex h-10 w-10 items-center justify-center text-red-600 hover:text-red-800" aria-label="Remover material">
+                                    <i class="bi bi-trash3" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        <% }) %>
+                    </div>
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit"
-                        class="w-full bg-green-950 hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-sm transition duration-300 uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="bi bi-plus-circle"></i> Salvar Produto
+                    <button id="submit-produto" type="submit" class="w-full bg-green-950 hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-sm transition duration-300 uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:bg-green-900/80">
+                        <i class="bi bi-check-circle"></i>
+                        <span><%= modoEdicao ? 'Salvar alterações' : 'Salvar Produto' %></span>
                     </button>
                 </div>
             </form>
 
         </div>
     </main>
+
+    <script type="application/json" id="materiais-data"><%- JSON.stringify(materiais).replace(/</g, '\\u003c') %></script>
+    <script>
+        const materiais = JSON.parse(document.getElementById('materiais-data').textContent);
+        const listaMateriais = document.getElementById('materiais-produto');
+        const campoImagem = document.getElementById('imagem');
+        const campoGaleria = document.getElementById('fotosGaleria');
+        const galeriaPreview = document.getElementById('galeria-preview');
+        const campoGaleriaExistente = document.getElementById('galeria-imagens-existentes');
+        const galeriaAtual = document.getElementById('galeria-atual');
+        const imagemPreview = document.getElementById('imagem-preview');
+        const imagemPreviewContainer = document.getElementById('imagem-preview-container');
+        const formProduto = document.getElementById('form-produto');
+        const feedback = document.getElementById('form-feedback');
+        const campoSobMedida = document.getElementById('sobMedida');
+        const campoEstoque = document.getElementById('quantidadeEstoque');
+        const campoPreco = document.getElementById('preco');
+        const botaoSubmit = document.getElementById('submit-produto');
+        const PRECO_APROXIMADO_SOB_MEDIDA = 1500;
+        let urlImagemPreview;
+
+        const definirErro = (campo, mensagem) => {
+            if (!campo) return;
+            campo.classList.add('border-red-500', 'bg-red-50');
+            campo.classList.remove('border-gray-200', 'border-green-800');
+            campo.setAttribute('aria-invalid', 'true');
+            campo.dataset.erro = mensagem;
+        };
+
+        const limparErro = (campo) => {
+            if (!campo) return;
+            campo.classList.remove('border-red-500', 'bg-red-50');
+            campo.classList.add('border-gray-200');
+            campo.removeAttribute('aria-invalid');
+            delete campo.dataset.erro;
+        };
+
+        const mostrarFeedback = (mensagem) => {
+            feedback.textContent = mensagem;
+            feedback.classList.remove('hidden');
+        };
+
+        const ocultarFeedback = () => {
+            feedback.textContent = '';
+            feedback.classList.add('hidden');
+        };
+
+        const validarCamposBasicos = () => {
+            const campos = formProduto.querySelectorAll('.campo-form');
+            campos.forEach(limparErro);
+            ocultarFeedback();
+
+            let primeiroCampoInvalido = null;
+
+            const nome = document.getElementById('nome');
+            if (!nome.value.trim()) {
+                definirErro(nome, 'Informe o nome do produto.');
+                if (!primeiroCampoInvalido) primeiroCampoInvalido = nome;
+            }
+
+            const preco = document.getElementById('preco');
+            const precoValor = Number(preco.value);
+            if (!Number.isFinite(precoValor) || precoValor <= 0) {
+                definirErro(preco, 'Informe um preço válido maior que zero.');
+                if (!primeiroCampoInvalido) primeiroCampoInvalido = preco;
+            }
+
+            const categoria = document.getElementById('codCategoria');
+            if (!categoria.value) {
+                definirErro(categoria, 'Selecione uma categoria.');
+                if (!primeiroCampoInvalido) primeiroCampoInvalido = categoria;
+            }
+
+            if (!campoSobMedida.checked) {
+                const estoqueValor = Number(campoEstoque.value);
+                if (!Number.isInteger(estoqueValor) || estoqueValor < 0) {
+                    definirErro(campoEstoque, 'Informe um estoque válido.');
+                    if (!primeiroCampoInvalido) primeiroCampoInvalido = campoEstoque;
+                }
+            }
+
+            const linhas = Array.from(listaMateriais.querySelectorAll('.material-row'));
+            linhas.forEach((linha) => {
+                const select = linha.querySelector('select[name="materialId"]');
+                const quantidade = linha.querySelector('input[name="quantidadeUsada"]');
+                const temMaterial = Boolean(select.value);
+                const temQuantidade = Boolean(quantidade.value && Number(quantidade.value) > 0);
+
+                if ((!temMaterial && !temQuantidade)) return;
+                if ((temMaterial && !temQuantidade) || (!temMaterial && temQuantidade)) {
+                    definirErro(quantidade, 'Selecione o material e informe a quantidade.');
+                    if (!primeiroCampoInvalido) primeiroCampoInvalido = quantidade;
+                    return;
+                }
+
+                if (Number(quantidade.value) <= 0) {
+                    definirErro(quantidade, 'A quantidade deve ser maior que zero.');
+                    if (!primeiroCampoInvalido) primeiroCampoInvalido = quantidade;
+                }
+            });
+
+            if (primeiroCampoInvalido) {
+                mostrarFeedback('Revise os campos destacados antes de salvar.');
+                primeiroCampoInvalido.focus();
+                primeiroCampoInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            }
+
+            return true;
+        };
+
+        const alternarEstoqueSobMedida = (preencherPrecoAproximado = false) => {
+            if (campoSobMedida.checked) {
+                campoEstoque.value = '0';
+                campoEstoque.disabled = true;
+                campoEstoque.classList.add('bg-gray-100', 'text-gray-500');
+                limparErro(campoEstoque);
+
+                const valorAtualPreco = Number(campoPreco.value);
+                if (preencherPrecoAproximado || !Number.isFinite(valorAtualPreco) || valorAtualPreco <= 0) {
+                    campoPreco.value = PRECO_APROXIMADO_SOB_MEDIDA.toFixed(2);
+                    campoPreco.placeholder = '1500.00';
+                }
+                return;
+            }
+
+            campoEstoque.disabled = false;
+            campoEstoque.classList.remove('bg-gray-100', 'text-gray-500');
+        };
+
+        campoSobMedida.addEventListener('change', () => alternarEstoqueSobMedida(true));
+
+        formProduto.addEventListener('submit', (event) => {
+            if (!validarCamposBasicos()) {
+                event.preventDefault();
+                return;
+            }
+
+            botaoSubmit.disabled = true;
+            const icone = botaoSubmit.querySelector('i');
+            if (icone) icone.classList.add('animate-spin');
+            botaoSubmit.querySelector('span').textContent = 'Salvando...';
+        });
+
+        document.querySelectorAll('.campo-form').forEach((campo) => {
+            campo.addEventListener('input', () => {
+                limparErro(campo);
+                if (feedback.classList.contains('hidden') === false) {
+                    const mensagem = feedback.textContent;
+                    if (mensagem.includes('Revise os campos')) ocultarFeedback();
+                }
+            });
+        });
+
+        const renderizarPreviewGaleria = () => {
+            galeriaPreview.replaceChildren();
+            Array.from(campoGaleria.files).forEach((arquivo, index) => {
+                const container = document.createElement('div');
+                container.className = 'relative';
+                const imagem = document.createElement('img');
+                imagem.src = URL.createObjectURL(arquivo);
+                imagem.alt = arquivo.name;
+                imagem.className = 'h-16 w-16 object-cover border border-gray-200';
+                imagem.onload = () => URL.revokeObjectURL(imagem.src);
+                const remover = document.createElement('button');
+                remover.type = 'button';
+                remover.dataset.removerFotoSelecionada = '';
+                remover.className = 'absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400';
+                remover.setAttribute('aria-label', `Retirar ${arquivo.name} da seleção`);
+                remover.title = 'Retirar foto selecionada';
+                remover.innerHTML = '<i class="bi bi-x-lg text-xs" aria-hidden="true"></i>';
+                remover.dataset.indice = String(index);
+                container.append(imagem, remover);
+                galeriaPreview.appendChild(container);
+            });
+        };
+
+        galeriaPreview.addEventListener('click', (event) => {
+            const botao = event.target.closest('[data-remover-foto-selecionada]');
+            if (!botao) return;
+
+            const indice = Number(botao.dataset.indice);
+            const arquivos = Array.from(campoGaleria.files);
+            if (!Number.isInteger(indice) || indice < 0 || indice >= arquivos.length) return;
+
+            const arquivosAtualizados = new DataTransfer();
+            arquivos.forEach((arquivo, index) => {
+                if (index !== indice) arquivosAtualizados.items.add(arquivo);
+            });
+            campoGaleria.files = arquivosAtualizados.files;
+            renderizarPreviewGaleria();
+        });
+
+        if (campoGaleriaExistente && galeriaAtual) {
+            galeriaAtual.addEventListener('click', (event) => {
+                const botao = event.target.closest('[data-remover-foto-galeria]');
+                if (!botao) return;
+
+                const imagens = campoGaleriaExistente.value.split(';').map(imagem => imagem.trim()).filter(Boolean);
+                const indice = Array.from(galeriaAtual.querySelectorAll('[data-remover-foto-galeria]')).indexOf(botao);
+                if (indice < 0) return;
+                imagens.splice(indice, 1);
+                campoGaleriaExistente.value = imagens.join(';');
+                botao.closest('.relative').remove();
+                galeriaAtual.querySelectorAll('[data-remover-foto-galeria]').forEach((botaoRestante, novoIndex) => {
+                    botaoRestante.setAttribute('aria-label', `Remover foto ${novoIndex + 1} da galeria`);
+                });
+            });
+        }
+
+        campoImagem.addEventListener('change', () => {
+            if (!campoImagem.files.length) return;
+            if (urlImagemPreview) URL.revokeObjectURL(urlImagemPreview);
+            urlImagemPreview = URL.createObjectURL(campoImagem.files[0]);
+            imagemPreview.src = urlImagemPreview;
+            imagemPreviewContainer.classList.remove('hidden');
+        });
+
+        campoGaleria.addEventListener('change', () => {
+            renderizarPreviewGaleria();
+        });
+
+        const criarLinhaMaterial = () => {
+            const linha = document.createElement('div');
+            linha.className = 'material-row grid grid-cols-[minmax(0,1fr)_4rem_2.5rem] gap-2 sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:gap-3';
+            const select = document.createElement('select');
+            select.name = 'materialId';
+            select.className = 'campo-material w-full min-w-0 bg-white border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-3 sm:text-sm focus:outline-none focus:border-green-800';
+            select.add(new Option('Nenhum material', ''));
+            materiais.forEach(material => select.add(new Option(`${material.nome_material} (${material.unidade_medida})`, material.id)));
+            const quantidade = document.createElement('input');
+            quantidade.type = 'number';
+            quantidade.name = 'quantidadeUsada';
+            quantidade.min = '0.01';
+            quantidade.step = '0.01';
+            quantidade.placeholder = 'Qtd.';
+            quantidade.className = 'campo-material w-full min-w-0 border border-gray-200 px-2 py-2 rounded-sm text-xs sm:px-3 sm:text-sm focus:outline-none focus:border-green-800';
+            const remover = document.createElement('button');
+            remover.type = 'button';
+            remover.className = 'remover-material flex h-10 w-10 items-center justify-center text-red-600 hover:text-red-800';
+            remover.setAttribute('aria-label', 'Remover material');
+            remover.innerHTML = '<i class="bi bi-trash3" aria-hidden="true"></i>';
+            linha.append(select, quantidade, remover);
+            listaMateriais.appendChild(linha);
+        };
+        document.getElementById('adicionar-material').addEventListener('click', criarLinhaMaterial);
+        listaMateriais.addEventListener('click', (evento) => {
+            const botao = evento.target.closest('.remover-material');
+            if (!botao) return;
+            const linhas = listaMateriais.querySelectorAll('.material-row');
+            if (linhas.length > 1) botao.closest('.material-row').remove();
+        });
+
+        alternarEstoqueSobMedida();
+    </script>
+    <script src="/pages/animacoes/anima_gerais.js"></script>
 
 </body>
 

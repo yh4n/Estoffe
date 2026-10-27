@@ -1,5 +1,5 @@
-node_modules/
+# .gitignore
 .env
-*.log
-dist/
-coverage/
+.env.example
+client_secret_*.json
+*.sql

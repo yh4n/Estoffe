@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página não encontrada - 404</title>
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+  
+  <!-- Seu arquivo CSS personalizado -->
+  <style>
+    /*======================
+    404 Page Styles
+=======================*/
+@import url('https://fonts.googleapis.com/css2?family=Arvo&display=swap');
+
+.page_404 {
+  padding: 40px 0;
+  background: #fff;
+  font-family: 'Arvo', serif;
+}
+
+.page_404 img {
+  width: 100%;
+}
+
+.four_zero_four_bg {
+  background-image: url(https://cdn.dribbble.com/users/285475/screenshots/2083086/dribbble_1.gif);
+  height: 400px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.four_zero_four_bg h1 {
+  font-size: 80px;
+}
+
+.four_zero_four_bg h3 {
+  font-size: 80px;
+}
+
+.link_404 {
+  color: #fff !important;
+  padding: 10px 20px;
+  background: #39ac31;
+  margin: 20px 0;
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.link_404:hover {
+  background: #2e8b28;
+  text-decoration: none;
+}
+
+.contant_box_404 {
+  margin-top: -50px;
+}
+  </style>
+</head>
+<body>
+
+  <section class="page_404">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="col-sm-10 col-sm-offset-1 text-center">
+            
+            <div class="four_zero_four_bg">
+              <h1 class="text-center">404</h1>
+            </div>
+
+            <div class="contant_box_404">
+              <h3 class="h2">Parece que você está perdido</h3>
+              <p>A página que você está procurando não está disponível!</p>
+              
+              <!-- Exibição condicional usando dados passados via EJS -->
+              <% if (usuario) { %>
+                <p>Olá, <strong><%= usuario.nome || usuario.email || 'Usuário' %></strong>!</p>
+              <% } %>
+
+              <p>Você será redirecionado para a página inicial em <span id="contador">10</span> segundos...</p>
+              
+              <a href="/" class="link_404">Ir para a Página Inicial</a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script de Redirecionamento Automático -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      let tempoRestante = 10; // Tempo em segundos antes de redirecionar
+      const elementoContador = document.getElementById("contador");
+
+      const intervalo = setInterval(() => {
+        tempoRestante--;
+        if (elementoContador) {
+          elementoContador.textContent = tempoRestante;
+        }
+
+        if (tempoRestante <= 0) {
+          clearInterval(intervalo);
+          window.location.href = "/"; // Redireciona para a home
+        }
+      }, 1000);
+    });
+  </script>
+
+</body>
+</html>

@@ -99,6 +99,16 @@ body {
   /* Escurece o botão ao passar o mouse */
 }
 
+.produto-adicionado img {
+  animation: flashImage 0.6s ease-in-out;
+}
+
+@keyframes flashImage {
+  0% { filter: brightness(1); transform: scale(1.03); }
+  50% { filter: brightness(0.7); transform: scale(1); }
+  100% { filter: brightness(1); transform: scale(1.03); }
+}
+
 .logo {
   font-size: 2rem;
   font-weight: 700;

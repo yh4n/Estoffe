@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Novos Orçamentos - Estoffe Admin</title>
@@ -25,9 +26,18 @@
   <main class="p-6 md:p-12 max-w-7xl mx-auto">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-800">Novos Orçamentos</h1>
-      <p class="text-gray-600 mt-1">Lista de pedidos recebidos com o status "Aberto" aguardando análise ou aprovação.
+      <p class="text-gray-600 mt-1">Prepare propostas, acompanhe as respostas e consulte o status dos orçamentos.
       </p>
     </div>
+    <% if (notificacao === 'enviada') { %>
+      <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        Orçamento enviado ao cliente.
+      </div>
+    <% } else if (notificacao === 'erro') { %>
+      <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        O orçamento foi salvo, mas o e-mail não foi enviado. Confira o cadastro do cliente e a configuração SMTP.
+      </div>
+    <% } %>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="p-6 overflow-x-auto">
@@ -37,6 +47,8 @@
               <th class="pb-3">Nº Pedido</th>
               <th class="pb-3">Cliente</th>
               <th class="pb-3">Data de Entrada</th>
+              <th class="pb-3">Frete pré-verificado</th>
+              <th class="pb-3">Status da proposta</th>
               <th class="pb-3 text-right">Ações</th>
             </tr>
           </thead>
@@ -52,7 +64,30 @@
                   </td>
 
                   <td class="py-4">
-                    <%= item.dataPedido ? new Date(item.dataPedido).toLocaleDateString('pt-BR') : '---' %>
+                    <%= item.dataEntrada || '---' %>
+                  </td>
+
+                  <td class="py-4">
+                    <% if (item.freteGratisEstimado) { %>
+                      <span class="font-semibold text-green-700">Grátis (cupom)</span>
+                    <% } else if (item.valorFreteEstimado !== null && item.valorFreteEstimado !== undefined) { %>
+                      <span class="font-semibold text-gray-800">R$ <%= Number(item.valorFreteEstimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
+                      <% if (item.prazoFreteEstimado) { %>
+                        <span class="block text-xs text-gray-500"><%= item.prazoFreteEstimado %> dias úteis</span>
+                      <% } %>
+                    <% } else { %>
+                      <span class="text-amber-700">Sem faixa para o CEP</span>
+                    <% } %>
+                  </td>
+
+                  <td class="py-4">
+                    <% if (item.statusOrcamento) { %>
+                      <span class="rounded-full px-2.5 py-1 text-xs font-semibold <%= item.statusOrcamento === 'Aprovado' ? 'bg-green-100 text-green-800' : item.statusOrcamento === 'Recusado' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800' %>">
+                        <%= item.statusOrcamento %>
+                      </span>
+                    <% } else { %>
+                      <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">Aguardando avaliação</span>
+                    <% } %>
                   </td>
 
                   <td class="py-4 text-right">
@@ -65,7 +100,7 @@
                 <% }); %>
                   <% } else { %>
                     <tr>
-                      <td colspan="4" class="py-8 text-center text-gray-400">Nenhum novo orçamento em aberto encontrado.
+                      <td colspan="6" class="py-8 text-center text-gray-400">Nenhum orçamento registrado.
                       </td>
                     </tr>
                     <% } %>

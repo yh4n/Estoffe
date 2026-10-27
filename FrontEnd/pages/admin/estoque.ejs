@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - Estoffe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <header class="flex items-center justify-between p-4 bg-green-950 text-white shadow-md">
+        <h1 class="text-xl font-bold uppercase tracking-wider">Controle de Estoque</h1>
+        <div class="flex gap-3">
+            <a href="/admin-dashboard" class="rounded-md bg-green-700 px-4 py-2 text-sm hover:bg-green-600"><i
+                    class="bi bi-speedometer2"></i> Painel</a>
+            <a href="/logout" class="rounded-md bg-red-600 px-4 py-2 text-sm hover:bg-red-700"><i
+                    class="bi bi-box-arrow-right"></i> Sair</a>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl space-y-8 p-6 md:p-10">
+        <section class="grid gap-6 lg:grid-cols-2">
+            <form action="/admin/estoque/material" method="post"
+                class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-green-950"><i class="bi bi-layers"></i> Novo material</h2>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="md:col-span-2">Nome
+                        <input required name="nome" class="mt-1 w-full rounded border p-2" maxlength="255">
+                    </label>
+                    <label>Quantidade inicial
+                        <input required type="number" step="0.01" min="0" name="quantidade"
+                            class="mt-1 w-full rounded border p-2">
+                    </label>
+                    <label>Unidade de medida
+                        <input required name="unidade_medida" placeholder="metros, kg, unidades"
+                            class="mt-1 w-full rounded border p-2" maxlength="20">
+                    </label>
+                    <label class="md:col-span-2">Descrição
+                        <textarea name="descricao" class="mt-1 w-full rounded border p-2" rows="2"></textarea>
+                    </label>
+                </div>
+                <button class="mt-4 rounded bg-green-800 px-4 py-2 font-medium text-white hover:bg-green-700">Cadastrar
+                    material</button>
+            </form>
+
+            <form action="/admin/estoque/produto" method="post"
+                class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-green-950"><i class="bi bi-box"></i> Novo produto acabado</h2>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="md:col-span-2">Nome
+                        <input required name="nome" class="mt-1 w-full rounded border p-2" maxlength="255">
+                    </label>
+                    <label>Quantidade inicial
+                        <input required type="number" min="0" step="1" name="quantidade_disponivel"
+                            class="mt-1 w-full rounded border p-2">
+                    </label>
+                    <label>Preço unitário
+                        <input required type="number" min="0" step="0.01" name="preco_unitario"
+                            class="mt-1 w-full rounded border p-2">
+                    </label>
+                    <label class="md:col-span-2">Descrição
+                        <textarea name="descricao" class="mt-1 w-full rounded border p-2" rows="2"></textarea>
+                    </label>
+                </div>
+                <button class="mt-4 rounded bg-green-800 px-4 py-2 font-medium text-white hover:bg-green-700">Cadastrar
+                    produto</button>
+            </form>
+        </section>
+
+        <section class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-4 text-lg font-bold text-green-950"><i class="bi bi-arrow-left-right"></i> Registrar
+                movimentação</h2>
+            <form action="/admin/estoque/movimentacao" method="post" class="grid gap-4 md:grid-cols-5">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <label class="md:col-span-2">Item
+                    <select required name="item" class="mt-1 w-full rounded border p-2">
+                        <option value="">Selecione um item pelo nome</option>
+                        <optgroup label="Materiais">
+                            <% materiais.forEach((material)=> { %>
+                                <option value="MATERIAL:<%= material.id %>">
+                                    <%= material.nome_material %> (<%= material.quantidade %>
+                                            <%= material.unidade_medida %>)
+                                </option>
+                                <% }) %>
+                        </optgroup>
+                        <optgroup label="Produtos acabados">
+                            <% produtos.forEach((produto)=> { %>
+                                <option value="PRODUTO:<%= produto.id %>">
+                                    <%= produto.nome_produto %> (<%= produto.quantidade_disponivel %> disponíveis)
+                                </option>
+                                <% }) %>
+                        </optgroup>
+                    </select>
+                </label>
+                <label>Movimento
+                    <select required name="tipo_movimentacao" class="mt-1 w-full rounded border p-2">
+                        <option value="ENTRADA">Entrada</option>
+                        <option value="SAIDA">Saída</option>
+                    </select>
+                </label>
+                <label>Quantidade
+                    <input required type="number" min="0.01" step="0.01" name="quantidade"
+                        class="mt-1 w-full rounded border p-2">
+                </label>
+                <label>Observação
+                    <input name="observacao" class="mt-1 w-full rounded border p-2">
+                </label>
+                <button
+                    class="rounded bg-blue-700 px-4 py-2 font-medium text-white hover:bg-blue-600 md:col-span-5 md:w-fit">Registrar
+                    movimentação</button>
+            </form>
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-2">
+            <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-green-950">Materiais</h2>
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b text-gray-500">
+                            <th class="p-2">Nome</th>
+                            <th class="p-2">Saldo</th>
+                            <th class="p-2">Unidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% materiais.forEach((material)=> { %><tr class="border-b">
+                                <td class="p-2">
+                                    <%= material.nome_material %>
+                                </td>
+                                <td class="p-2 font-semibold">
+                                    <%= material.quantidade %>
+                                </td>
+                                <td class="p-2">
+                                    <%= material.unidade_medida %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+                <% if (!materiais.length) { %>
+                    <p class="py-4 text-gray-500">Nenhum material cadastrado.</p>
+                    <% } %>
+            </div>
+            <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 class="mb-4 text-lg font-bold text-green-950">Produtos acabados</h2>
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b text-gray-500">
+                            <th class="p-2">Nome</th>
+                            <th class="p-2">Saldo</th>
+                            <th class="p-2">Preço</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% produtos.forEach((produto)=> { %><tr class="border-b">
+                                <td class="p-2">
+                                    <%= produto.nome_produto %>
+                                </td>
+                                <td class="p-2 font-semibold">
+                                    <%= produto.quantidade_disponivel %>
+                                </td>
+                                <td class="p-2">R$ <%= Number(produto.preco_unitario).toFixed(2) %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+                <% if (!produtos.length) { %>
+                    <p class="py-4 text-gray-500">Nenhum produto cadastrado.</p>
+                    <% } %>
+            </div>
+        </section>
+
+        <section class="overflow-x-auto rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 class="mb-4 text-lg font-bold text-green-950">Últimas movimentações</h2>
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="border-b text-gray-500">
+                        <th class="p-2">Data</th>
+                        <th class="p-2">Tipo</th>
+                        <th class="p-2">Item</th>
+                        <th class="p-2">Quantidade</th>
+                        <th class="p-2">Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% movimentacoes.forEach((movimento)=> { %><tr class="border-b">
+                            <td class="p-2">
+                                <%= new Date(movimento.data_movimentacao).toLocaleString('pt-BR') %>
+                            </td>
+                            <td class="p-2">
+                                <%= movimento.tipo_movimentacao %>
+                            </td>
+                            <td class="p-2">
+                                <%= movimento.nome_item || 'Item removido' %>
+                            </td>
+                            <td class="p-2">
+                                <%= movimento.quantidade %>
+                            </td>
+                            <td class="p-2">
+                                <%= movimento.observacao || '-' %>
+                            </td>
+                        </tr>
+                        <% }) %>
+                </tbody>
+            </table>
+            <% if (!movimentacoes.length) { %>
+                <p class="py-4 text-gray-500">Nenhuma movimentação registrada.</p>
+                <% } %>
+        </section>
+    </main>
+</body>
+
+</html>

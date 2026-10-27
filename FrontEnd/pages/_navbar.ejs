@@ -1,0 +1,105 @@
+<header id="main-header"
+    class="flex items-center justify-between p-4 bg-green-950 shadow-md fixed top-0 left-0 w-full z-50 transition-all duration-500">
+    <a id="header-logo" href="/" class="flex items-center">
+        <img id="logo-img" src="/image/LogoNavBar.png" alt="Logo Estoffe"
+            class="h-16 md:h-19 w-auto transition-all duration-500">
+    </a>
+
+    <button id="menu-btn" class="block md:hidden text-white focus:outline-none z-50" aria-label="Abrir menu"
+        aria-controls="menu" aria-expanded="false">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <% const caminhoAtual=typeof currentPath !=='undefined' ? currentPath : '' ; %>
+        <nav id="menu"
+            class="fixed left-0 -top-full w-full h-screen bg-green-900/90 shadow-lg shadow-green-950/50 flex flex-col items-center justify-center transition-all duration-300 md:static md:h-auto md:w-auto md:flex-row md:bg-transparent filter backdrop-blur-md md:backdrop-blur-5 md:shadow-none">
+            <ul
+                class="flex flex-col items-center gap-8 text-sm font-medium uppercase tracking-widest md:flex-row md:space-x-8 md:gap-0">
+                <li>
+                    <a href="/"
+                        class="nav-link-item <%= caminhoAtual === '/' ? 'text-white font-bold' : 'text-gray-300 hover:text-white' %> transition-colors duration-300"
+                        <%=caminhoAtual==='/' ? 'data-active="true"' : '' %>>
+                        <i class="bi bi-house-door mr-1"></i>Início
+                    </a>
+                </li>
+                <li>
+                    <a href="/produtos"
+                        class="nav-link-item <%= caminhoAtual.startsWith('/produtos') ? 'text-white font-bold' : 'text-gray-300 hover:text-white' %> transition-colors duration-300"
+                        <%=caminhoAtual.startsWith('/produtos') ? 'data-active="true"' : '' %>>
+                        <i class="bi bi-bag mr-1"></i>Produtos
+                    </a>
+                </li>
+                <li>
+                    <a href="/produtos-sob-medida"
+                        class="nav-link-item <%= caminhoAtual === '/produtos-sob-medida' ? 'text-white font-bold' : 'text-gray-300 hover:text-white' %> transition-colors duration-300"
+                        <%=caminhoAtual==='/produtos-sob-medida' ? 'data-active="true"' : '' %>>
+                        <i class="bi bi-tools mr-1"></i>Sob Medida
+                    </a>
+                </li>
+                <li>
+                    <a href="/sobre"
+                        class="nav-link-item <%= caminhoAtual === '/sobre' ? 'text-white font-bold' : 'text-gray-300 hover:text-white' %> transition-colors duration-300"
+                        <%=caminhoAtual==='/sobre' ? 'data-active="true"' : '' %>>
+                        <i class="bi bi-info-circle mr-1"></i>Sobre
+                    </a>
+                </li>
+                <li>
+                    <a href="/contato"
+                        class="nav-link-item <%= caminhoAtual === '/contato' ? 'text-white font-bold' : 'text-gray-300 hover:text-white' %> transition-colors duration-300"
+                        <%=caminhoAtual==='/contato' ? 'data-active="true"' : '' %>>
+                        <i class="bi bi-envelope mr-1"></i>Contato
+                    </a>
+                </li>
+
+                <% if (typeof usuario !=='undefined' && usuario) { %>
+                    <% if (usuario.tipo==='admin' ) { %>
+                        <li>
+                            <a href="/admin-dashboard"
+                                class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                <i class="bi bi-shield-lock mr-1"></i>Painel Administrativo
+                            </a>
+                        </li>
+                        <% } else if (usuario.tipo==='estofador' ) { %>
+                            <li>
+                                <a href="/estofador-dashboard"
+                                    class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                    <i class="bi bi-tools mr-1"></i>Painel do Estofador
+                                </a>
+                            </li>
+                            <% } else { %>
+                                <li>
+                                    <a href="<%= usuario.tipo === 'client' ? '/client-dashboard' : '/perfil' %>"
+                                        class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                        <i class="bi bi-person-circle mr-1"></i>Meu Perfil
+                                    </a>
+                                </li>
+                                <% } %>
+                                    <li>
+                                        <a href="/logout"
+                                            class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                            <i class="bi bi-box-arrow-right mr-1"></i>Sair
+                                        </a>
+                                    </li>
+                                    <% } else { %>
+                                        <li>
+                                            <a href="/login"
+                                                class="nav-link-item text-gray-300 hover:text-white transition-colors duration-300">
+                                                <i class="bi bi-person mr-1"></i>Login
+                                            </a>
+                                        </li>
+                                        <% } %>
+            </ul>
+
+            <a href="/carrinho"
+                class="relative nav-link-item text-gray-300 hover:text-white transition-colors duration-300 p-2"
+                aria-label="Carrinho de compras">
+                <i class="bi bi-cart3 text-xl md:text-2xl"></i>
+                <span id="cart-count"
+                    class="absolute top-0 right-0 bg-red-600 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center shadow-sm <%= Number(typeof cartCount !== 'undefined' ? cartCount : 0) > 0 ? '' : 'hidden' %>">
+                    <%= typeof cartCount !=='undefined' ? cartCount : 0 %>
+                </span>
+            </a>
+        </nav>
+</header>

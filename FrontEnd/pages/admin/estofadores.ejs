@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estofadores Ativos - Estoffe Admin</title>
@@ -66,13 +67,14 @@
                   <i class="bi bi-journal-check"></i> Ver Trabalhos
                 </a>
               <button
-                onclick="abrirModalEditar('<%= estofador.codUsuario %>', '<%= estofador.nome %>', '<%= estofador.email %>')"
-                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
-                title="Editar Perfil">
+                class="btn-editar-estofador p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
+                data-id="<%= estofador.codUsuario %>" data-nome="<%= estofador.nome %>"
+                data-email="<%= estofador.email %>" title="Editar Perfil">
                 <i class="bi bi-pencil-square"></i>
               </button>
                 <form action="/admin/estofador/<%= estofador.codUsuario %>/excluir" method="POST"
                 onsubmit="return confirm('Tem certeza que deseja remover o acesso deste estofador?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit"
                   class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
                   title="Remover Acesso">
@@ -101,6 +103,7 @@
             class="bi bi-x-lg"></i></button>
       </div>
       <form action="/admin/estofador/novo" method="POST" class="p-6 space-y-4">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nome Completo</label>
           <input type="text" name="nome" required
@@ -112,8 +115,7 @@
             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-900">
         </div>
         <p class="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-100"><i
-            class="bi bi-info-circle"></i> A senha padrão de acesso para novos usuários criados será
-          <strong>123456</strong>.</p>
+            class="bi bi-info-circle"></i> A senha padrão de acesso para novos usuários criados será "123456"</p>
         <div class="pt-2 flex justify-end gap-2">
           <button type="button" onclick="fecharModalNovo()"
             class="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-200">Cancelar</button>
@@ -134,6 +136,7 @@
             class="bi bi-x-lg"></i></button>
       </div>
       <form id="formEditar" method="POST" class="p-6 space-y-4">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nome Completo</label>
           <input type="text" id="editarNome" name="nome" required
@@ -175,6 +178,14 @@
     function fecharModalEditar() {
       document.getElementById('modalEditar').classList.add('hidden');
     }
+
+    // Usa data-attributes em vez de argumentos inline no onclick,
+    // evitando quebra de HTML/JS quando nome ou email contém aspas.
+    document.querySelectorAll('.btn-editar-estofador').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        abrirModalEditar(btn.dataset.id, btn.dataset.nome, btn.dataset.email);
+      });
+    });
   </script>
 </body>
 

@@ -1,0 +1,14 @@
+<section class="bg-white border-y border-gray-100 px-6 py-4 md:px-16" aria-label="Mensagem dos mascotes Estoffe">
+    <div class="mx-auto flex max-w-5xl flex-col items-center justify-center gap-5 text-center sm:flex-row sm:text-left">
+        <div class="flex shrink-0 items-end justify-center gap-2">
+            <% mascotes.forEach((mascote) => { %>
+                <img src="/image/Novo_grupo/<%= mascote.imagem %>" alt="<%= mascote.nome %>" loading="lazy"
+                    class="h-24 w-20 object-contain sm:h-28 sm:w-24">
+            <% }) %>
+        </div>
+        <div>
+            <p class="text-xs font-bold uppercase tracking-[0.3em] text-green-700">A turma da Estoffe</p>
+            <p class="mt-2 text-sm leading-relaxed text-gray-700"><%= mensagem %></p>
+        </div>
+    </div>
+</section>

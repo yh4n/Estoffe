@@ -4,29 +4,8 @@ const router = express.Router();
 // Importa a conexão com o banco de dados
 const db = require("../config/database");
 
-// Middleware de autenticação específico para o Router do Estofador
-function verificarAutenticacao(tiposPermitidos) {
-  return (req, res, next) => {
-    const usuario = req.session.usuario;
-    if (!usuario || !usuario.token) {
-      return res.redirect("/login");
-    }
-    try {
-      const jwt = require("jsonwebtoken");
-      const SECRET_KEY = "EstoffeMoveisPlanejados2026";
-      const decodificado = jwt.verify(usuario.token, SECRET_KEY);
-
-      if (tiposPermitidos.includes(decodificado.tipo)) {
-        return next();
-      } else {
-        return res.status(403).send("Acesso negado: Você não tem permissão para ver esta página.");
-      }
-    } catch (error) {
-      req.session.destroy();
-      return res.redirect("/login");
-    }
-  };
-}
+// Importa middleware centralizado de autenticação
+const { verificarAutenticacao } = require("../config/middleware/auth");
 
 // ==========================================
 // ROTAS DO ESTOFADOR (OFICINA)
@@ -79,6 +58,12 @@ router.get("/estofador-dashboard", verificarAutenticacao(["estofador"]), async (
     // Renderiza a página passando os indicadores reais buscados no banco
     res.render("estofador/estofador-dashboard", {
       usuario: req.session.usuario,
+      notificacao:
+        req.query.notificacao === "erro"
+          ? "erro"
+          : req.query.notificacao === "enviada"
+            ? "enviada"
+            : null,
       indicadores: {
         iniciados: totalIniciados,
         concluidos: totalConcluidos,

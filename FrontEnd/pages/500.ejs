@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro Interno do Servidor - 500</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Seu arquivo CSS personalizado -->
+    <style>
+        .five_zero_zero_bg {
+            /* GIF de robô/servidor em manutenção */
+            background-image: url(https://cdn.dribbble.com/users/1078347/screenshots/2799566/oops.gif);
+            height: 400px;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .five_zero_zero_bg h1 {
+            font-size: 80px;
+            color: #d9534f;
+            /* Cor avermelhada para indicar erro interno */
+        }
+
+        /* Estilos adicionais para botões e detalhes do erro */
+        .link_404.btn_retry {
+            background: #337ab7;
+            border: none;
+            cursor: pointer;
+        }
+
+        .link_404.btn_retry:hover {
+            background: #23527c;
+        }
+
+        .link_404.link_secondary {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .link_404.link_secondary:hover {
+            background: #5a6268;
+        }
+
+        .error-details {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="page_404 page_500">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="col-sm-10 col-sm-offset-1 text-center">
+
+                        <!-- Banner/GIF do erro 500 -->
+                        <div class="five_zero_zero_bg">
+                            <h1 class="text-center">500</h1>
+                        </div>
+
+                        <div class="contant_box_404">
+                            <h3 class="h2">Ops! Algo deu errado no nosso servidor</h3>
+                            <p>Estamos enfrentando instabilidades temporárias. Já fomos notificados do problema!</p>
+
+                            <!-- Exibição de mensagem de erro em ambiente de desenvolvimento (opcional) -->
+                            <% if (typeof erro !=='undefined' && erro) { %>
+                                <div class="alert alert-danger error-details"
+                                    style="text-align: left; margin-top: 15px;">
+                                    <small><strong>Detalhes do Erro:</strong>
+                                        <%= erro %>
+                                    </small>
+                                </div>
+                                <% } %>
+
+                                    <!-- Exibição condicional do usuário -->
+                                    <% if (typeof usuario !=='undefined' && usuario) { %>
+                                        <p>Desculpe pelo transtorno, <strong>
+                                                <%= usuario.nome || usuario.email || 'Usuário' %>
+                                            </strong>.</p>
+                                        <% } %>
+
+                                            <p>Tentando recarregar a página automaticamente em <span
+                                                    id="contador">10</span> segundos...</p>
+
+                                            <div class="actions">
+                                                <button onclick="window.location.reload();"
+                                                    class="link_404 btn_retry">Tentar Novamente</button>
+                                                <a href="/" class="link_404 link_secondary">Ir para a Página Inicial</a>
+                                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Script de Tentativa de Recarregamento Automático -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let tempoRestante = 10; // Tempo em segundos antes de tentar recarregar
+            const elementoContador = document.getElementById("contador");
+
+            const intervalo = setInterval(() => {
+                tempoRestante--;
+                if (elementoContador) {
+                    elementoContador.textContent = tempoRestante;
+                }
+
+                if (tempoRestante <= 0) {
+                    clearInterval(intervalo);
+                    window.location.reload(); // Recarrega a página atual para tentar novamente
+                }
+            }, 1000);
+        });
+    </script>
+
+</body>
+
+</html>

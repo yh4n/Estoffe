@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analisar Pedido #<%= pedido.codPedido %> - Estoffe Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="../../image/Icons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
@@ -44,6 +44,23 @@
           </span>
         </div>
       </div>
+      <% if (notificacao === 'enviada') { %>
+        <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+          O orçamento foi enviado ao cliente.
+        </div>
+      <% } else if (notificacao === 'erro') { %>
+        <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          O orçamento foi salvo, mas o e-mail não foi enviado. Confira o cadastro do cliente e a configuração SMTP.
+        </div>
+      <% } %>
+      <% if (pedido.statusOrcamento) { %>
+        <div class="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+          Status da proposta:
+          <strong class="<%= pedido.statusOrcamento === 'Aprovado' ? 'text-green-700' : pedido.statusOrcamento === 'Recusado' ? 'text-red-700' : 'text-amber-700' %>">
+            <%= pedido.statusOrcamento %>
+          </strong>
+        </div>
+      <% } %>
 
       <!-- Dados do Cliente -->
       <div class="mb-8">
@@ -61,8 +78,30 @@
               <%= pedido.emailCliente %>
             </p>
           </div>
+          <div class="md:col-span-2">
+            <p class="text-xs text-gray-500">CEP para cálculo do frete</p>
+            <p class="font-medium text-gray-800"><%= pedido.cepFreteEstimado || pedido.cepCliente || 'Não cadastrado' %></p>
+          </div>
         </div>
       </div>
+
+      <section class="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4" aria-labelledby="frete-previa">
+        <h3 id="frete-previa" class="font-semibold text-blue-950">
+          <i class="bi bi-truck"></i> Pré-verificação do frete
+        </h3>
+        <% if (pedido.valorFreteEstimado !== null && pedido.valorFreteEstimado !== undefined) { %>
+          <p class="mt-1 text-sm text-blue-900">
+            Estimativa para CEP <%= pedido.cepFreteEstimado || pedido.cepCliente || 'não informado' %>:
+            <strong><%= pedido.freteGratisEstimado ? 'Grátis (cupom)' : `R$ ${Number(pedido.valorFreteEstimado).toFixed(2).replace('.', ',')}` %></strong>
+            <% if (pedido.prazoFreteEstimado) { %>
+              <span> · prazo estimado de <%= pedido.prazoFreteEstimado %> dias úteis</span>
+            <% } %>
+          </p>
+          <p class="mt-1 text-xs text-blue-800">Este valor de referência foi calculado pelo CEP no carrinho. Confirme ou ajuste o frete antes de enviar a proposta; a IA também recebe essa prévia.</p>
+        <% } else { %>
+          <p class="mt-1 text-sm text-amber-800">Não foi encontrada uma faixa de frete para o CEP informado. Defina o valor manualmente antes de gerar a proposta.</p>
+        <% } %>
+      </section>
 
       <!-- Itens Solicitados -->
       <div class="mt-6 border-t border-gray-100 pt-6">
@@ -71,18 +110,26 @@
           <% if (pedido.itens && pedido.itens.length> 0) { %>
             <div class="divide-y divide-gray-200">
               <% pedido.itens.forEach(function(item) { %>
-                <div class="py-3 flex justify-between items-center first:pt-0 last:pb-0">
-                  <div>
-                    <p class="font-semibold text-gray-800 text-sm">
-                      <%= item.nomeProduto %>
-                    </p>
-                    <p class="text-xs text-gray-500 italic mt-1">
-                      <strong>Obs:</strong>
-                      <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
-                    </p>
-                    <p class="text-xs text-gray-400 mt-0.5">
-                      Preço Unitário: R$ <%= Number(item.precoUnitario).toFixed(2).replace('.', ',' ) %>
-                    </p>
+                <div class="py-3 flex justify-between items-center gap-4 first:pt-0 last:pb-0">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <% if (item.imagemProduto) { %>
+                      <img
+                        src="<%= /^https?:\/\//i.test(item.imagemProduto) ? item.imagemProduto : '/' + item.imagemProduto.replace(/^\/+/, '') %>"
+                        alt="<%= item.nomeProduto %>"
+                        class="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0">
+                    <% } %>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-gray-800 text-sm">
+                        <%= item.nomeProduto %>
+                      </p>
+                      <p class="text-xs text-gray-500 italic mt-1">
+                        <strong>Obs:</strong>
+                        <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
+                      </p>
+                      <p class="text-xs text-gray-400 mt-0.5">
+                        Preço Unitário: R$ <%= Number(item.precoUnitario).toFixed(2).replace('.', ',' ) %>
+                      </p>
+                    </div>
                   </div>
                   <div class="text-right">
                     <span class="text-xs font-bold bg-green-100 text-green-800 px-2.5 py-0.5 rounded-sm">
@@ -102,48 +149,234 @@
         </div>
       </div>
 
+      <div class="mt-6 border-t border-gray-100 pt-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Margem de materiais para produção</h3>
+          <span class="text-xs font-medium text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">Validada na aprovação</span>
+        </div>
+        <% if (pedido.consumoPrevisto && pedido.consumoPrevisto.length> 0) { %>
+          <div class="overflow-x-auto border border-gray-100 rounded-sm">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th class="p-3">Material</th>
+                  <th class="p-3">Quantidade prevista</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% pedido.consumoPrevisto.forEach(function(consumo) { %>
+                  <tr>
+                    <td class="p-3 font-medium text-gray-800">
+                      <%= consumo.nomeMaterial %>
+                    </td>
+                    <td class="p-3 text-gray-600">
+                      <%= consumo.quantidadeConsumida %>
+                        <%= consumo.unidadeMedida %>
+                    </td>
+                  </tr>
+                  <% }); %>
+              </tbody>
+            </table>
+          </div>
+          <% } else { %>
+            <p class="text-sm text-gray-500 italic">Nenhum material foi definido para os produtos deste pedido.</p>
+            <% } %>
+      </div>
+
+      <div class="mt-6 border-t border-gray-100 pt-6">
+        <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">Custo estimado de materiais</h3>
+        <% if (pedido.custoMateriais.materiais.length) { %>
+          <div class="overflow-x-auto rounded-sm border border-gray-100">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th class="p-3">Material</th>
+                  <th class="p-3">Quantidade</th>
+                  <th class="p-3">Custo unitário</th>
+                  <th class="p-3">Custo calculado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% pedido.custoMateriais.materiais.forEach(function(material) { %>
+                  <tr>
+                    <td class="p-3 font-medium text-gray-800"><%= material.nomeMaterial %></td>
+                    <td class="p-3 text-gray-600"><%= material.quantidade %> <%= material.unidadeMedida %></td>
+                    <td class="p-3 text-gray-600">
+                      <%= material.custoUnitario === null ? 'Não cadastrado' : `R$ ${material.custoUnitario.toFixed(2).replace('.', ',')}` %>
+                    </td>
+                    <td class="p-3 text-gray-600">
+                      <%= material.custoTotal === null ? 'Indisponível' : `R$ ${material.custoTotal.toFixed(2).replace('.', ',')}` %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm font-semibold text-gray-800">
+            Custo conhecido de materiais: R$ <%= pedido.custoMateriais.valorMateriais.toFixed(2).replace('.', ',') %>
+          </p>
+          <% if (pedido.custoMateriais.materiaisSemCusto) { %>
+            <p class="mt-1 text-xs text-amber-700">Estimativa parcial: cadastre o custo de <%= pedido.custoMateriais.materiaisSemCusto %> material(is) para completar o cálculo.</p>
+          <% } %>
+        <% } else { %>
+          <p class="text-sm text-amber-700">Sem composição de materiais cadastrada; não é possível calcular esse custo automaticamente.</p>
+        <% } %>
+      </div>
+
       <!-- Ações do Gerente -->
       <div class="border-t border-gray-100 pt-6 flex flex-col md:flex-row justify-between items-end gap-6">
-        <form action="/admin/pedido/<%= pedido.codPedido %>/status" method="POST">
-          <input type="hidden" name="novoStatus" value="Cancelado">
-          <button type="submit"
-            class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-sm">
-            Recusar Orçamento
-          </button>
-        </form>
+        <% if (pedido.status === 'Aguardando Avaliação' || pedido.statusOrcamento === 'Pendente') { %>
+          <form action="/admin/pedido/<%= pedido.codPedido %>/status" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="novoStatus" value="Cancelado">
+            <button type="submit"
+              class="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-sm">
+              Recusar Orçamento
+            </button>
+          </form>
+        <% } %>
 
-        <form action="/admin/pedido/<%= pedido.codPedido %>/status" method="POST"
-          class="w-full md:max-w-md flex flex-col sm:flex-row items-end gap-3">
-          <input type="hidden" name="novoStatus" value="Em Produção">
+        <% if (pedido.status === 'Aguardando Avaliação' && !pedido.statusOrcamento) { %>
+          <form action="/admin/pedido/<%= pedido.codPedido %>/orcamento" method="POST"
+            id="formOrcamento" class="w-full space-y-4">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <label class="block text-xs font-semibold text-gray-500">
+                VALOR DOS ITENS
+                <input type="number" id="valorBase" value="<%= pedido.totalItens.toFixed(2) %>" readonly
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              </label>
+              <label for="valorMaoDeObra" class="block text-xs font-semibold text-gray-500">
+                MÃO DE OBRA E MARGEM
+                <input type="number" name="valorMaoDeObra" id="valorMaoDeObra" min="0" max="1000000" step="0.01"
+                  value="<%= Number(pedido.valorMaoDeObra || 0).toFixed(2) %>" required
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
+              </label>
+              <label for="valorFrete" class="block text-xs font-semibold text-gray-500">
+                FRETE DA PROPOSTA
+                <input type="number" name="valorFrete" id="valorFrete" min="0" max="1000000" step="0.01"
+                  value="<%= Number(pedido.valorFreteEstimado ?? pedido.valorFrete ?? 0).toFixed(2) %>" required
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
+                <% if (pedido.valorFreteEstimado !== null && pedido.valorFreteEstimado !== undefined) { %>
+                  <span class="mt-1 block font-normal normal-case text-blue-700">Prévia do sistema: <%= pedido.freteGratisEstimado ? 'grátis (cupom)' : `R$ ${Number(pedido.valorFreteEstimado).toFixed(2).replace('.', ',')}` %></span>
+                <% } %>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500">O custo de materiais acima é informativo e pode ser parcial. Informe mão de obra/margem; o total da proposta será calculado a partir dos itens, mão de obra/margem e frete.</p>
+            <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 class="font-semibold text-violet-950"><i class="bi bi-stars"></i> Assistente de orçamento IA</h3>
+                  <p class="mt-1 text-xs text-violet-800">A Gemini recebe itens, valores e a prévia do frete, sem dados pessoais. O frete pré-verificado é apenas referência; o rascunho é editável e deve ser revisado antes do envio.</p>
+                </div>
+                <button type="button" id="gerarRascunho"
+                  class="rounded-lg bg-violet-800 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+                  Gerar sugestão
+                </button>
+              </div>
+              <p id="erroAssistente" role="alert" class="mt-2 hidden text-sm text-red-700"></p>
+              <label for="mensagemOrcamento" class="mt-3 block text-xs font-semibold uppercase text-gray-600">
+                Mensagem que será enviada ao cliente
+                <textarea name="mensagemOrcamento" id="mensagemOrcamento" maxlength="3000" rows="4"
+                  class="mt-1 w-full rounded-lg border border-gray-300 bg-white p-3 text-sm font-normal normal-case text-gray-800"
+                  placeholder="Escreva uma apresentação do orçamento ou gere uma sugestão com IA."></textarea>
+              </label>
+            </div>
+            <p class="text-lg font-bold text-gray-900">Total da proposta: R$ <span id="totalOrcamento"><%= pedido.totalItens.toFixed(2).replace('.', ',') %></span></p>
+            <button type="submit"
+              class="rounded-lg bg-green-950 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-900">
+              Enviar orçamento ao cliente
+            </button>
+          </form>
+          <% } %>
 
-          <div class="w-full">
-            <label for="codEstofador"
-              class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Selecione o Estofador
-              Responsável *</label>
-            <select name="codEstofador" id="codEstofador" required
-              class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-green-950">
-              <option value="" disabled selected>Escolha um profissional...</option>
-              <% estofadores.forEach(function(estofador) { %>
-                <option value="<%= estofador.codUsuario %>">
-                  <%= estofador.nome %>
-                </option>
-                <% }); %>
-            </select>
-          </div>
+            <% if (['Aberto', 'Pago' ].includes(pedido.status)) { %>
+              <form action="/admin/pedido/<%= pedido.codPedido %>/status" method="POST"
+                class="w-full md:max-w-md flex flex-col sm:flex-row items-end gap-3">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="novoStatus" value="Em Produção">
 
-          <button type="submit"
-            class="w-full sm:w-auto px-5 py-2.5 bg-green-950 hover:bg-green-900 text-white font-medium rounded-lg transition-colors shadow-sm text-sm whitespace-nowrap h-[40px]">
-            Aprovar e Iniciar
-          </button>
-        </form>
+                <div class="w-full">
+                  <label for="codEstofador"
+                    class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Selecione o
+                    Estofador
+                    Responsável *</label>
+                  <select name="codEstofador" id="codEstofador" required
+                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-green-950">
+                    <option value="" disabled selected>Escolha um profissional...</option>
+                    <% estofadores.forEach(function(estofador) { %>
+                      <option value="<%= estofador.codUsuario %>">
+                        <%= estofador.nome %>
+                      </option>
+                      <% }); %>
+                  </select>
+                </div>
+
+                <button type="submit"
+                  class="w-full sm:w-auto px-5 py-2.5 bg-green-950 hover:bg-green-900 text-white font-medium rounded-lg transition-colors shadow-sm text-sm whitespace-nowrap h-[40px]">
+                  Aprovar e Iniciar
+                </button>
+              </form>
+              <% } %>
 
       </div>
 
     </div>
-
-    </div>
   </main>
+  <% if (pedido.status === 'Aguardando Avaliação' && !pedido.statusOrcamento) { %>
+    <script>
+      const formOrcamento = document.getElementById("formOrcamento");
+      const valorFrete = document.getElementById("valorFrete");
+      const valorMaoDeObra = document.getElementById("valorMaoDeObra");
+      const totalOrcamento = document.getElementById("totalOrcamento");
+      const botaoAssistente = document.getElementById("gerarRascunho");
+      const erroAssistente = document.getElementById("erroAssistente");
+      const csrfToken = formOrcamento.querySelector('[name="_csrf"]').value;
+      const formatarReais = (valor) => Number(valor).toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
+      function atualizarTotalOrcamento() {
+        const base = Number(document.getElementById("valorBase").value) || 0;
+        const maoDeObra = Number(valorMaoDeObra.value) || 0;
+        const frete = Number(valorFrete.value) || 0;
+        totalOrcamento.textContent = formatarReais(base + maoDeObra + frete);
+      }
+
+      valorFrete.addEventListener("input", atualizarTotalOrcamento);
+      valorMaoDeObra.addEventListener("input", atualizarTotalOrcamento);
+      botaoAssistente.addEventListener("click", async () => {
+        erroAssistente.textContent = "";
+        erroAssistente.classList.add("hidden");
+        botaoAssistente.disabled = true;
+        botaoAssistente.textContent = "Gerando...";
+        try {
+          const resposta = await fetch(
+            "/admin/pedido/<%= pedido.codPedido %>/orcamento/assistente-ia",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                _csrf: csrfToken,
+                valorFrete: valorFrete.value,
+                valorMaoDeObra: valorMaoDeObra.value,
+              }),
+            },
+          );
+          const resultado = await resposta.json();
+          if (!resposta.ok) throw new Error(resultado.erro || "Não foi possível gerar a sugestão.");
+          document.getElementById("mensagemOrcamento").value = resultado.rascunho;
+        } catch (error) {
+          erroAssistente.textContent = error.message;
+          erroAssistente.classList.remove("hidden");
+        } finally {
+          botaoAssistente.disabled = false;
+          botaoAssistente.textContent = "Gerar sugestão";
+        }
+      });
+    </script>
+  <% } %>
 </body>
 
 </html>

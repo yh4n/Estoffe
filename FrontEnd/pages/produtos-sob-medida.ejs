@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos Sob Medida - Estoffe</title>
+    <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/../css/style.css">
+</head>
+
+<body>
+    <%- include('_navbar') %>
+
+    <section class="relative bg-green-950 text-white pt-80 pb-50 px-6 md:px-25 lg:px-33 overflow-hidden">
+        <div class="absolute inset-0 opacity-5 pointer-events-none flex items-center justify-center">
+            <span class="text-[26vw] text-white font-serif font-bold italic select-none">Medida</span>
+        </div>
+
+        <div class="max-w-7xl mx-auto relative z-10 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-[0.6em] text-green-400 mb-3 block">Atelier Especializado</span>
+                <h1 class="text-5xl md:text-7xl font-light tracking-tight">Produtos <span class="font-extrabold text-white">Sob Medida</span></h1>
+                <div class="w-16 h-[2px] bg-green-400 mt-4 mx-auto md:mx-0"></div>
+            </div>
+            <p class="text-gray-300 font-light max-w-md text-sm md:text-base leading-relaxed">
+                Peças exclusivas criadas para o seu projeto, com acabamento artesanal, medida ideal e acabamento pensado para sua rotina.
+            </p>
+        </div>
+    </section>
+
+    <main class="py-12 px-6 md:px-16 lg:px-24 flex-grow">
+        <div class="max-w-7xl mx-auto">
+            <% if (produtos.length === 0) { %>
+                <div class="text-center py-12 text-gray-500">
+                    <i class="bi bi-exclamation-circle text-3xl block mb-2"></i>
+                    Ainda não há peças sob medida cadastradas.
+                </div>
+            <% } else { %>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <% produtos.forEach(produto => { %>
+                        <div class="group bg-white rounded-sm overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+                            <div>
+                                <div class="aspect-square w-full overflow-hidden bg-gray-100 relative">
+                                    <span class="absolute top-4 left-4 z-10 bg-amber-600 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-sm">Sob Medida</span>
+                                    <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-500">
+                                </div>
+
+                                <div class="p-6">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="text-xl font-bold text-gray-900"><%= produto.nome %></h3>
+                                        <span class="text-right text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-sm tabular-nums">
+                                            R$ <%= Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %>
+                                        </span>
+                                    </div>
+
+                                    <p class="text-sm text-gray-600 font-light leading-relaxed mb-4">
+                                        <%= produto.descricao || 'Peça exclusiva sob medida desenvolvida para atender ao projeto ideal do cliente.' %>
+                                    </p>
+
+                                    <div class="mb-4">
+                                        <a href="/produtos/<%= produto.codProduto %>" target="_blank" rel="noopener noreferrer"
+                                            class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-green-950 hover:text-green-800 transition-colors duration-300">
+                                            Ver mais <i class="bi bi-arrow-up-right-square"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-6 pt-0" data-purchase-container>
+                                <form action="/carrinho/add/<%= produto.codProduto %>" method="POST" data-offline-cart-form data-authenticated="<%= usuario && usuario.tipo === 'cliente' ? 'true' : 'false' %>" data-product-id="<%= produto.codProduto %>">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="w-full text-center flex items-center justify-center gap-2 bg-green-950 hover:bg-green-800 text-white font-semibold px-4 py-3 rounded-sm transition-colors duration-300 uppercase tracking-wider text-xs cursor-pointer">
+                                        <i class="bi bi-bag-plus"></i> Comprar
+                                    </button>
+                                </form>
+                                <a href="/orcamento-sob-medida?produto=<%= encodeURIComponent(produto.nome) %>" class="mt-3 block text-center text-xs font-bold uppercase tracking-wider text-green-950 hover:text-green-800 transition-colors duration-300">
+                                    <i class="bi bi-chat-square-text"></i> Solicitar Orçamento
+                                </a>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <%- include('_mascote', {
+        mascotes: [
+            { nome: 'Lino', imagem: 'lino.png' },
+            { nome: 'Nino', imagem: 'nino.png' }
+        ],
+        mensagem: 'O Lino e o Nino ajudam a transformar suas ideias em uma peça feita sob medida para o seu espaço.'
+    }) %>
+
+    <footer class="bg-green-950 text-gray-400 text-sm py-12 px-6 md:px-16 lg:px-24 border-t border-green-900">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+            <div>
+                <p class="text-white font-bold text-lg tracking-wider uppercase">Estoffe</p>
+                <p class="text-xs text-gray-400 mt-1">Produtos feitos sob medida para o seu ambiente.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="/pages/animacoes/anima_gerais.js"></script>
+</body>
+
+</html>

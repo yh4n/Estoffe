@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 
 <head>
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel do Estofador - Estoffe Oficina</title>
@@ -29,6 +30,16 @@
       <h1 class="text-3xl font-bold text-gray-800">Olá, <%= usuario.nome %>!</h1>
       <p class="text-gray-600 mt-1">Visão geral da sua área de trabalho, controle de produção e serviços atribuídos.</p>
     </div>
+
+    <% if (notificacao === 'enviada') { %>
+      <div role="status" class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        Pedido atualizado e notificação enviada ao cliente.
+      </div>
+    <% } else if (notificacao === 'erro') { %>
+      <div role="alert" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        O pedido foi atualizado, mas não foi possível enviar o e-mail ao cliente. A equipe administrativa foi informada.
+      </div>
+    <% } %>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
@@ -121,6 +132,7 @@
 
                       <% if (ordem.status==='Em Produção' ) { %>
                         <form action="/admin/pedido/<%= ordem.codPedido %>/status" method="POST" class="inline-block">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                           <input type="hidden" name="novoStatus" value="Pronto">
                           <button type="submit"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm">

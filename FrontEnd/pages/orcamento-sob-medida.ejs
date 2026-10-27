@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento Sob Medida - Estoffe</title>
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+  <%- include('_navbar') %>
+
+  <section class="relative overflow-hidden bg-green-950 px-6 pb-16 pt-40 text-white md:px-16 md:pb-20">
+    <div class="mx-auto max-w-7xl">
+      <span class="mb-3 block text-xs font-bold uppercase tracking-[0.35em] text-green-400">Atendimento personalizado</span>
+      <h1 class="text-4xl font-light md:text-6xl">Orçamento <span class="font-bold">Sob Medida</span></h1>
+      <p class="mt-4 max-w-2xl text-sm leading-relaxed text-gray-300 md:text-base">
+        Conte um pouco sobre o projeto. Nossa equipe entrará em contato para entender medidas, materiais e acabamentos.
+      </p>
+    </div>
+  </section>
+
+  <main class="px-6 py-12 md:px-16 md:py-16">
+    <div class="mx-auto max-w-3xl">
+      <% if (sucesso) { %>
+        <div role="status" class="mb-6 border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-900">
+          Recebemos sua solicitação. Em breve entraremos em contato.
+        </div>
+      <% } %>
+
+      <form action="/orcamento-sob-medida/enviar" method="POST" class="space-y-5 border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label for="nome" class="mb-1 block text-sm font-semibold text-gray-700">Nome</label>
+            <input type="text" id="nome" name="nome" maxlength="100" autocomplete="name" required
+              class="w-full border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none">
+          </div>
+          <div>
+            <label for="email" class="mb-1 block text-sm font-semibold text-gray-700">E-mail</label>
+            <input type="email" id="email" name="email" maxlength="150" autocomplete="email" required
+              class="w-full border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none">
+          </div>
+          <div>
+            <label for="telefone" class="mb-1 block text-sm font-semibold text-gray-700">Telefone / WhatsApp</label>
+            <input type="tel" id="telefone" name="telefone" inputmode="tel" autocomplete="tel" maxlength="16"
+              placeholder="(00) 00000-0000" pattern="[0-9()+. -]{10,16}" required
+              class="w-full border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none">
+          </div>
+          <div>
+            <label for="cep" class="mb-1 block text-sm font-semibold text-gray-700">CEP do projeto</label>
+            <input type="text" id="cep" name="cep" inputmode="numeric" autocomplete="postal-code" maxlength="9"
+              placeholder="00000-000" pattern="[0-9]{5}-?[0-9]{3}" required
+              class="w-full border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label for="produto" class="mb-1 block text-sm font-semibold text-gray-700">Produto ou peça desejada</label>
+          <input type="text" id="produto" name="produto" maxlength="150" value="<%= produto %>"
+            placeholder="Ex.: sofá sob medida ou cabeceira personalizada"
+            class="w-full border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none">
+        </div>
+
+        <div>
+          <label for="mensagem" class="mb-1 block text-sm font-semibold text-gray-700">Detalhes do projeto</label>
+          <textarea id="mensagem" name="mensagem" required rows="5"
+            placeholder="Descreva medidas aproximadas, materiais, cores ou outras informações importantes."
+            class="w-full resize-y border border-gray-300 px-3 py-3 text-sm focus:border-green-800 focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-green-950 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-green-800">
+          <i class="bi bi-send" aria-hidden="true"></i> Enviar solicitação
+        </button>
+      </form>
+
+      <p class="mt-5 text-sm text-gray-500"><a href="/contato" class="font-semibold text-green-900 underline underline-offset-4">Ir para o contato geral</a></p>
+    </div>
+  </main>
+
+  <%- include('_mascote', {
+    mascotes: [
+      { nome: 'Lino', imagem: 'lino.png' },
+      { nome: 'Nino', imagem: 'nino.png' }
+    ],
+    mensagem: 'O Lino e o Nino estão com você neste projeto. Conte para nossa equipe o que você imagina para sua peça.'
+  }) %>
+
+  <footer class="border-t border-green-900 bg-green-950 px-6 py-10 text-sm text-gray-400 md:px-16">
+    <div class="mx-auto max-w-7xl">
+      <p class="font-bold uppercase tracking-wider text-white">Estoffe</p>
+      <p class="mt-1 text-xs">Atendimento para projetos personalizados.</p>
+    </div>
+  </footer>
+</body>
+
+</html>

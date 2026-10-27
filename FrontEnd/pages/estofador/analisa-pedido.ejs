@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analisar Pedido #<%= pedido.codPedido %> - Estoffe estofador</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="icon" type="image/png" href="../../image/Icons/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/png" href="/image/Icons/favicon-96x96.png" sizes="96x96" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
@@ -48,19 +48,27 @@
       <div class="mt-6 border-t border-gray-100 pt-6">
         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Itens Solicitados</h3>
         <div class="bg-gray-50 rounded-sm p-4 border border-gray-100">
-          <% if (pedido.itens && pedido.itens.length> 0) { %>
-            <div class="divide-y divide-gray-200">
+          <div class="divide-y divide-gray-200">
+            <% if (pedido.itens && pedido.itens.length > 0) { %>
               <% pedido.itens.forEach(function(item) { %>
-                <div class="py-3 flex justify-between items-center first:pt-0 last:pb-0">
-                  <div>
-                    <p class="font-semibold text-gray-800 text-sm">
-                      <%= item.nomeProduto %>
-                    </p>
+                <div class="py-3 flex justify-between items-center gap-4 first:pt-0 last:pb-0">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <% if (item.imagemProduto) { %>
+                      <img
+                        src="<%= /^https?:\/\//i.test(item.imagemProduto) ? item.imagemProduto : '/' + item.imagemProduto.replace(/^\/+/, '') %>"
+                        alt="<%= item.nomeProduto %>"
+                        class="w-16 h-16 rounded-md object-cover border border-gray-200 shrink-0">
+                    <% } %>
+                    <div class="min-w-0">
+                      <p class="font-semibold text-gray-800 text-sm">
+                        <%= item.nomeProduto %>
+                      </p>
 
-                    <p class="text-xs text-gray-500 italic mt-1">
-                      <strong>Obs:</strong>
-                      <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
-                    </p>
+                      <p class="text-xs text-gray-500 italic mt-1">
+                        <strong>Obs:</strong>
+                        <%= item.observacaoProduto || 'Nenhuma observação informada.' %>
+                      </p>
+                    </div>
                   </div>
                   <div class="text-right">
                     <span
@@ -68,13 +76,88 @@
                       Qtd: <%= item.quantidade %>
                     </span>
                   </div>
-                  <% }); %>
                 </div>
-                <% } else { %>
-                  <p class="text-sm text-gray-500 italic">Nenhum item vinculado a este orçamento no banco de dados.</p>
-                  <% } %>
-            </div>
+              <% }); %>
+            <% } else { %>
+              <p class="text-sm text-gray-500 italic">Nenhum item vinculado a este orçamento no banco de dados.</p>
+            <% } %>
+          </div>
         </div>
+      </div>
+
+      <div class="mt-6 border-t border-gray-100 pt-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Saída prevista de materiais</h3>
+          <span class="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md">Baixa ao finalizar</span>
+        </div>
+        <% if (pedido.consumoPrevisto && pedido.consumoPrevisto.length > 0) { %>
+          <div class="overflow-x-auto border border-gray-100 rounded-sm">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th class="p-3">Material</th>
+                  <th class="p-3">Quantidade prevista</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <% pedido.consumoPrevisto.forEach(function(consumo) { %>
+                  <tr>
+                    <td class="p-3 font-medium text-gray-800"><%= consumo.nomeMaterial %></td>
+                    <td class="p-3 text-gray-600"><%= consumo.quantidadeConsumida %> <%= consumo.unidadeMedida %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <p class="text-sm text-gray-500 italic">Nenhum material foi definido para os produtos deste pedido.</p>
+        <% } %>
+      </div>
+
+      <div class="mt-6 border-t border-gray-100 pt-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Adicionar saída de material</h3>
+          <span class="text-xs font-medium text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">Baixa imediata</span>
+        </div>
+        <% if (pedido.status === 'Em Produção') { %>
+          <form action="/estofador/pedido/<%= pedido.codPedido %>/materiais" method="POST"
+            class="grid gap-3 sm:grid-cols-[1fr_150px_auto] items-end">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="text-xs font-semibold text-gray-500">Material
+              <select required name="materialId" class="mt-1 w-full rounded border border-gray-200 p-2 text-sm">
+                <option value="">Selecione um material</option>
+                <% materiais.forEach(function(material) { %>
+                  <option value="<%= material.id %>">
+                    <%= material.nome_material %> (<%= material.quantidade %> <%= material.unidade_medida %> disponíveis)
+                  </option>
+                <% }); %>
+              </select>
+            </label>
+            <label class="text-xs font-semibold text-gray-500">Quantidade
+              <input required type="number" name="quantidade" min="0.01" step="0.01"
+                class="mt-1 w-full rounded border border-gray-200 p-2 text-sm">
+            </label>
+            <button type="submit" class="rounded bg-green-800 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+              <i class="bi bi-plus-circle"></i> Registrar
+            </button>
+          </form>
+        <% } else { %>
+          <p class="text-sm text-gray-500 italic">Materiais adicionais só podem ser registrados durante a produção.</p>
+        <% } %>
+
+        <% if (materiaisAdicionais && materiaisAdicionais.length > 0) { %>
+          <div class="mt-5 border-t border-gray-100 pt-4">
+            <p class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Saídas adicionais registradas</p>
+            <div class="space-y-2 text-sm text-gray-600">
+              <% materiaisAdicionais.forEach(function(material) { %>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                  <span><%= material.nomeMaterial %></span>
+                  <strong><%= material.quantidade %> <%= material.unidadeMedida %></strong>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% } %>
       </div>
     </div>
   </main>
