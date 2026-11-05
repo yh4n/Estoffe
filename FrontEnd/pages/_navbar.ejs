@@ -3,6 +3,13 @@
     <% const caminhoAtual = typeof currentPath !== 'undefined' ? currentPath : ''; %>
     <% const usuarioLogado = typeof usuario !== 'undefined' ? usuario : null; %>
     <% const clienteLogado = Boolean(usuarioLogado && usuarioLogado.tipo === 'cliente'); %>
+    <% const contaAtiva = clienteLogado
+        ? ['/client-dashboard', '/notificacoes', '/perfil'].includes(caminhoAtual)
+        : usuarioLogado && usuarioLogado.tipo === 'admin'
+            ? caminhoAtual === '/admin-dashboard' || caminhoAtual.startsWith('/admin/') || caminhoAtual === '/notificacoes'
+            : usuarioLogado && usuarioLogado.tipo === 'estofador'
+                ? caminhoAtual.startsWith('/estofador')
+                : false; %>
     <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
         <a id="header-logo" href="/" class="flex shrink-0 items-center" aria-label="Estoffe, página inicial">
             <img id="logo-img" src="/image/LogoNavBar.png" alt="Estoffe"
@@ -22,13 +29,6 @@
         <nav id="menu"
             class="fixed inset-0 z-40 flex h-screen w-full -translate-y-2 flex-col items-stretch justify-start overflow-y-auto bg-green-950/95 px-5 pb-8 pt-24 opacity-0 shadow-xl shadow-green-950/20 backdrop-blur-md transition-all duration-300 pointer-events-none md:static md:h-auto md:w-auto md:translate-y-0 md:flex-row md:items-center md:justify-end md:overflow-visible md:bg-transparent md:p-0 md:opacity-100 md:shadow-none md:backdrop-blur-none md:pointer-events-auto">
             <ul class="flex w-full flex-col items-stretch gap-2 text-base font-medium md:w-auto md:flex-row md:items-center md:gap-1">
-                <li>
-                    <a href="/"
-                        class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
-                        <% if (caminhoAtual === '/') { %>data-active="true" aria-current="page"<% } %>>
-                        <i class="bi bi-house-door" aria-hidden="true"></i><span>Início</span>
-                    </a>
-                </li>
                 <li>
                     <a href="/produtos"
                         class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/produtos' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
@@ -59,57 +59,58 @@
                 </li>
 
                 <% if (usuarioLogado) { %>
-                    <% if (clienteLogado) { %>
-                        <li>
-                            <a href="/client-dashboard#pedidos"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/client-dashboard' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
-                                <% if (caminhoAtual === '/client-dashboard') { %>data-active="true" aria-current="page"<% } %>>
-                                <i class="bi bi-receipt" aria-hidden="true"></i><span>Meus pedidos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/notificacoes"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
-                                <% if (caminhoAtual === '/notificacoes') { %>data-active="true" aria-current="page"<% } %>>
-                                <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/perfil"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/perfil' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
-                                <% if (caminhoAtual === '/perfil') { %>data-active="true" aria-current="page"<% } %>>
-                                <i class="bi bi-person-circle" aria-hidden="true"></i><span>Meu perfil</span>
-                            </a>
-                        </li>
-                    <% } else if (usuarioLogado.tipo === 'admin') { %>
-                        <li>
-                            <a href="/admin-dashboard"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition text-green-100 hover:bg-white/10 hover:text-white">
-                                <i class="bi bi-shield-lock" aria-hidden="true"></i><span>Painel administrativo</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="/notificacoes"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition text-green-100 hover:bg-white/10 hover:text-white">
-                                <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
-                            </a>
-                        </li>
-                    <% } else if (usuarioLogado.tipo === 'estofador') { %>
-                        <li>
-                            <a href="/estofador-dashboard"
-                                class="nav-link-item !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition text-green-100 hover:bg-white/10 hover:text-white">
-                                <i class="bi bi-tools" aria-hidden="true"></i><span>Oficina</span>
-                            </a>
-                        </li>
-                    <% } %>
-                    <li class="pt-2 md:pt-0">
-                        <form action="/logout" method="POST">
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <button type="submit"
-                            class="nav-link-item !ml-0 flex w-full items-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-green-100 transition hover:border-red-200/30 hover:bg-red-500/10 hover:text-white md:ml-1">
-                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span>
-                            </button>
-                        </form>
+                    <li class="account-menu">
+                        <details>
+                            <summary
+                                class="nav-link-item account-menu-toggle !ml-0 flex list-none items-center gap-2 rounded-lg px-3 py-2.5 transition <%= contaAtiva ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                <% if (contaAtiva) { %>data-active="true"<% } %>>
+                                <i class="bi bi-person-circle" aria-hidden="true"></i><span>Minha conta</span>
+                                <i class="bi bi-chevron-down account-menu-chevron" aria-hidden="true"></i>
+                            </summary>
+                            <div class="account-menu-panel">
+                                <% if (clienteLogado) { %>
+                                    <a href="/client-dashboard#pedidos"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/client-dashboard' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual === '/client-dashboard') { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-receipt" aria-hidden="true"></i><span>Meus pedidos</span>
+                                    </a>
+                                    <a href="/notificacoes"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual === '/notificacoes') { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+                                    </a>
+                                    <a href="/perfil"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/perfil' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual === '/perfil') { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-person" aria-hidden="true"></i><span>Meu perfil</span>
+                                    </a>
+                                <% } else if (usuarioLogado.tipo === 'admin') { %>
+                                    <a href="/admin-dashboard"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/admin-dashboard' || caminhoAtual.startsWith('/admin/') ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual === '/admin-dashboard' || caminhoAtual.startsWith('/admin/')) { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-shield-lock" aria-hidden="true"></i><span>Painel administrativo</span>
+                                    </a>
+                                    <a href="/notificacoes"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual === '/notificacoes') { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+                                    </a>
+                                <% } else if (usuarioLogado.tipo === 'estofador') { %>
+                                    <a href="/estofador-dashboard"
+                                        class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual.startsWith('/estofador') ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
+                                        <% if (caminhoAtual.startsWith('/estofador')) { %>data-active="true" aria-current="page"<% } %>>
+                                        <i class="bi bi-tools" aria-hidden="true"></i><span>Oficina</span>
+                                    </a>
+                                <% } %>
+                                <form action="/logout" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit"
+                                        class="nav-link-item account-menu-link !ml-0 flex w-full items-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-left text-green-100 transition hover:border-red-200/30 hover:bg-red-500/10 hover:text-white">
+                                        <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Sair</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
                     </li>
                 <% } else { %>
                     <li>

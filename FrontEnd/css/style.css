@@ -244,6 +244,50 @@ footer p {
   font-size: 1.05em;
 }
 
+#menu .account-menu {
+  position: relative;
+}
+
+#menu .account-menu-toggle {
+  cursor: pointer;
+  list-style: none;
+}
+
+#menu .account-menu-toggle::-webkit-details-marker {
+  display: none;
+}
+
+#menu .account-menu-chevron {
+  margin-left: auto;
+  font-size: 0.75em;
+  transition: transform 180ms ease;
+}
+
+#menu .account-menu details[open] .account-menu-chevron {
+  transform: rotate(180deg);
+}
+
+#menu .account-menu-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 1;
+  display: flex;
+  min-width: 14rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(226, 190, 113, 0.25);
+  border-radius: 0.75rem;
+  background: rgba(8, 33, 23, 0.98);
+  box-shadow: 0 12px 32px rgba(4, 20, 13, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+#menu .account-menu-panel form {
+  margin-top: 0.25rem;
+}
+
 #menu > a[aria-label="Carrinho de compras"] {
   color: #102719;
   border-color: #e5c779;
@@ -305,6 +349,17 @@ footer p {
     border-color: rgba(243, 210, 138, 0.28);
   }
 
+  #menu .account-menu-panel {
+    position: static;
+    min-width: 0;
+    padding: 0.5rem 0 0 1rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
   #menu > a[aria-label="Carrinho de compras"] {
     min-height: 3.25rem;
     margin-top: 1rem;
@@ -313,6 +368,7 @@ footer p {
 
 @media (prefers-reduced-motion: reduce) {
   #menu .nav-link-item,
+  #menu .account-menu-chevron,
   #menu > a[aria-label="Carrinho de compras"],
   #menu-btn .menu-icon-line {
     transition: none;
