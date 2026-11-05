@@ -12,34 +12,6 @@ window.addEventListener('scroll', function () {
     }
 });
 
-// --- ANIMAÇÃO PARA O MOBILE DA NAVBAR ---
-const menuBtn = document.getElementById('menu-btn');
-const menu = document.getElementById('menu');
-
-if (menuBtn && menu) {
-    const definirMenuAberto = (aberto) => {
-        menu.classList.toggle('-top-full', !aberto);
-        menu.classList.toggle('top-0', aberto);
-        menuBtn.setAttribute('aria-expanded', String(aberto));
-        menuBtn.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
-    };
-
-    menuBtn.addEventListener('click', () => {
-        definirMenuAberto(menuBtn.getAttribute('aria-expanded') !== 'true');
-    });
-
-    menu.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => definirMenuAberto(false));
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && menuBtn.getAttribute('aria-expanded') === 'true') {
-            definirMenuAberto(false);
-            menuBtn.focus();
-        }
-    });
-}
-
 let estiloTransicaoEstoffe;
 
 function iniciarTransicaoEstoffe(alvo) {

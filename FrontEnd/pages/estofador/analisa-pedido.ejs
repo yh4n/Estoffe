@@ -41,7 +41,7 @@
       </div>
 
       <section class="mt-6 border-t border-gray-100 pt-6">
-        <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">Fotos do andamento</h3>
+        <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-gray-500">Fotos do andamento (Lembre de Atualizar a cada nova Etapa, ex: Estrutura pronta para montagem)</h3>
         <% if (pedido.status === 'Em Produção') { %>
           <form action="/estofador/pedido/<%= pedido.codPedido %>/fotos" method="POST" enctype="multipart/form-data"
             class="mb-5 grid gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">

@@ -667,9 +667,8 @@
       }
 
       .login-brand {
-        min-height: 420px;
-
-        padding-bottom: 0;
+        min-height: auto;
+        padding: 80px 20px 20px;
       }
 
       .login-section {
@@ -679,18 +678,7 @@
       }
 
       .sofa-area {
-        height: 300px;
-      }
-
-      .sofa-image {
-        width: 90%;
-      }
-
-      .bear-image {
-        height: 260px;
-
-        right: 20%;
-        bottom: 50px;
+        display: none;
       }
 
       .brand-text h1 {
@@ -709,20 +697,8 @@
       }
 
       .login-brand {
-        min-height: 350px;
-
-        padding: 20px;
-      }
-
-      .sofa-area {
-        height: 240px;
-      }
-
-      .bear-image {
-        height: 210px;
-
-        right: 17%;
-        bottom: 40px;
+        min-height: auto;
+        padding: 60px 20px 16px;
       }
 
       .login-card {

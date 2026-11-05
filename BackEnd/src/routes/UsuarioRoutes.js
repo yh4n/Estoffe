@@ -754,7 +754,11 @@ router.post("/forgot-password", async (req, res) => {
       [email, token, dataExpiracao],
     );
 
-    const linkRecuperacao = `${process.env.APP_URL || "http://localhost:3005"}/reset-password?token=${token}`;
+    const urlBase = process.env.APP_URL || "http://localhost:3005";
+    const linkRecuperacao = new URL(
+      `/redefinir-senha/${encodeURIComponent(token)}`,
+      urlBase,
+    ).toString();
     const linkRecuperacaoHtml = linkRecuperacao
       .replace(/&/g, "&amp;")
       .replace(/"/g, "&quot;")
@@ -796,8 +800,8 @@ router.post("/forgot-password", async (req, res) => {
                 </tr>
               </table>
               <p style="margin:0 0 8px; color:#526258; font-size:13px; line-height:20px;">Por segurança, este link expira em <strong>1 hora</strong>.</p>
-              <p style="margin:0; color:#526258; font-size:13px; line-height:20px;">Se o botão não funcionar, copie e cole este endereço no navegador:</p>
-              <p style="margin:8px 0 0; word-break:break-all; font-size:12px; line-height:19px;"><a href="${linkRecuperacaoHtml}" style="color:#1d5936; text-decoration:underline;">${linkRecuperacaoHtml}</a></p>
+              <p style="margin:0; color:#526258; font-size:13px; line-height:20px;">Se o botão não funcionar, acesse a página de redefinição por este link:</p>
+              <p style="margin:8px 0 0; font-size:13px; line-height:20px;"><a href="${linkRecuperacaoHtml}" style="color:#1d5936; text-decoration:underline;">Acessar redefinição de senha</a></p>
             </td>
           </tr>
           <tr>
@@ -828,8 +832,8 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-router.get("/reset-password", async (req, res) => {
-  const { token } = req.query;
+router.get(["/reset-password", "/redefinir-senha/:token"], async (req, res) => {
+  const token = req.params.token || req.query.token;
   try {
     const [tokens] = await db.query(
       "SELECT * FROM recuperacao_senha WHERE token = ? AND expiracao > NOW() AND usado = 0",
