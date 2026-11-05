@@ -4,6 +4,36 @@ const db = require("../config/database");
 const { verificarAutenticacao } = require("../config/middleware/auth");
 
 router.get(
+  "/notificacoes/api/resumo",
+  verificarAutenticacao(["admin", "cliente"]),
+  async (req, res) => {
+    try {
+      await db.schemaNotificacoesPronto;
+      const codUsuario = req.session.usuario.codUsuario;
+      const [[{ unreadCount }]] = await db.query(
+        "SELECT COUNT(*) AS unreadCount FROM notificacao WHERE codUsuario = ? AND lida = 0",
+        [codUsuario],
+      );
+      const [ultimasNotificacoes] = await db.query(
+        `SELECT codNotificacao, titulo, mensagem, link
+           FROM notificacao
+          WHERE codUsuario = ?
+          ORDER BY codNotificacao DESC
+          LIMIT 1`,
+        [codUsuario],
+      );
+      res.json({
+        unreadCount: Number(unreadCount),
+        latest: ultimasNotificacoes[0] || null,
+      });
+    } catch (error) {
+      console.error("Erro ao consultar resumo das notificações:", error);
+      res.status(500).json({ erro: "Não foi possível consultar as notificações." });
+    }
+  },
+);
+
+router.get(
   "/notificacoes",
   verificarAutenticacao(["admin", "cliente"]),
   async (req, res) => {

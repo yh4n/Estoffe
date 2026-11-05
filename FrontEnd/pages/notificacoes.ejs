@@ -19,6 +19,10 @@
         <a href="/client-dashboard" class="font-bold tracking-wide">ESTOFFE</a>
         <div class="flex items-center gap-4 text-sm">
           <a href="/client-dashboard" class="text-green-100 transition hover:text-amber-200">Meus pedidos</a>
+          <a href="/notificacoes" class="flex items-center gap-1 text-green-100 transition hover:text-amber-200" aria-current="page">
+            <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+            <span data-notification-count class="hidden min-w-5 rounded-full bg-amber-400 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-green-950"></span>
+          </a>
           <form action="/logout" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="text-green-100 transition hover:text-amber-200">Sair</button>
@@ -34,11 +38,17 @@
         <p class="text-xs font-bold uppercase tracking-widest text-green-800">Central de avisos</p>
         <h1 class="mt-1 text-3xl font-bold text-gray-900">Notificações</h1>
         <p class="mt-1 text-sm text-gray-600">
-          <%= notificacoes.filter((notificacao) => !notificacao.lida).length %> não lida(s)
+          <span data-notification-unread><%= notificacoes.filter((notificacao) => !notificacao.lida).length %></span> não lida(s)
         </p>
       </div>
+      <div class="flex flex-col items-start gap-1 sm:items-end">
+        <button id="browser-notifications-toggle" type="button" class="rounded-md border border-green-800 bg-white px-4 py-2 text-sm font-semibold text-green-900 transition hover:bg-green-50">
+          Ativar avisos no navegador
+        </button>
+        <p id="browser-notifications-status" class="text-xs text-gray-500" role="status" aria-live="polite"></p>
+      </div>
       <% if (notificacoes.some((notificacao) => !notificacao.lida)) { %>
-        <form action="/notificacoes/lidas" method="POST">
+        <form action="/notificacoes/lidas" method="POST" data-mark-all-read>
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button type="submit" class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
             Marcar todas como lidas
@@ -89,6 +99,9 @@
       </div>
     <% } %>
   </main>
+  <% if (usuario.tipo !== 'admin') { %>
+    <script src="/pages/notificacoes.js" defer></script>
+  <% } %>
 </body>
 
 </html>

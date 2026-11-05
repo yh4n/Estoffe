@@ -52,6 +52,7 @@
                 <li>
                     <a href="/notificacoes" class="flex items-center gap-2 rounded-lg px-3 py-2 text-green-100 transition hover:bg-white/10 hover:text-white <%= caminhoAdmin === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : '' %>" <% if (caminhoAdmin === '/notificacoes') { %>aria-current="page"<% } %>>
                         <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+                        <span data-notification-count class="hidden min-w-5 rounded-full bg-amber-400 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-green-950"></span>
                     </a>
                 </li>
                 <li class="pt-2 md:pt-0">
@@ -66,6 +67,7 @@
         </nav>
     </div>
 </header>
+<script src="/pages/notificacoes.js" defer></script>
 
 <script>
     const adminMenuButton = document.getElementById('admin-menu-button');

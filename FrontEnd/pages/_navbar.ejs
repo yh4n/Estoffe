@@ -78,6 +78,7 @@
                                         class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/notificacoes' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
                                         <% if (caminhoAtual === '/notificacoes') { %>data-active="true" aria-current="page"<% } %>>
                                         <i class="bi bi-bell" aria-hidden="true"></i><span>Notificações</span>
+                                        <span data-notification-count class="hidden min-w-5 rounded-full bg-amber-400 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-green-950"></span>
                                     </a>
                                     <a href="/perfil"
                                         class="nav-link-item account-menu-link !ml-0 flex items-center gap-2 rounded-lg px-3 py-2.5 transition <%= caminhoAtual === '/perfil' ? 'bg-white/10 font-semibold text-white' : 'text-green-100 hover:bg-white/10 hover:text-white' %>"
@@ -138,3 +139,6 @@
     </div>
 </header>
 <script src="/pages/nav-mobile.js" defer></script>
+<% if (usuarioLogado && ['admin', 'cliente'].includes(usuarioLogado.tipo)) { %>
+    <script src="/pages/notificacoes.js" defer></script>
+<% } %>
