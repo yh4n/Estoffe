@@ -23,6 +23,20 @@
           O CPF ou CNPJ informado é inválido.
         </div>
         <% } %>
+          <% if (error==='senhas_diferentes' ) { %>
+            <div role="alert" class="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4">
+              As senhas não coincidem. Nenhuma alteração foi salva.
+            </div>
+          <% } else if (error==='senha_curta' ) { %>
+            <div role="alert" class="bg-red-50 border border-red-300 text-red-800 rounded-lg p-4">
+              A nova senha deve ter pelo menos 8 caracteres. Nenhuma alteração foi salva.
+            </div>
+          <% } %>
+          <% if (success) { %>
+            <div role="status" class="bg-green-50 border border-green-300 text-green-800 rounded-lg p-4">
+              Perfil atualizado com sucesso.
+            </div>
+          <% } %>
 
           <div class="bg-white rounded-lg shadow-xl overflow-hidden">
             <div class="bg-green-900 p-6 text-white flex items-center space-x-4">

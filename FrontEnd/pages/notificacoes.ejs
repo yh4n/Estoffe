@@ -19,7 +19,10 @@
         <a href="/client-dashboard" class="font-bold tracking-wide">ESTOFFE</a>
         <div class="flex items-center gap-4 text-sm">
           <a href="/client-dashboard" class="text-green-100 transition hover:text-amber-200">Meus pedidos</a>
-          <a href="/logout" class="text-green-100 transition hover:text-amber-200">Sair</a>
+          <form action="/logout" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="text-green-100 transition hover:text-amber-200">Sair</button>
+          </form>
         </div>
       </div>
     </header>

@@ -127,14 +127,6 @@ async function removerImagemProduto(caminhoImagem) {
 }
 
 async function buscarConsumoPrevisto(executor, idPedido) {
-  await executor.query(
-    `INSERT INTO estoque_materiais (nome_material, quantidade, unidade_medida)
-     SELECT m.nome, 0, 'unidades'
-     FROM material m
-     LEFT JOIN estoque_materiais em ON em.nome_material = m.nome
-     WHERE em.id IS NULL`,
-  );
-
   const [consumos] = await executor.query(
     `SELECT pm.codMaterial AS materialId,
           em.id AS estoqueMaterialId,
@@ -144,7 +136,7 @@ async function buscarConsumoPrevisto(executor, idPedido) {
      FROM itempedido ip
      INNER JOIN produtomaterial pm ON pm.codProduto = ip.codProduto
     INNER JOIN material m ON m.codMaterial = pm.codMaterial
-    INNER JOIN estoque_materiais em ON em.nome_material = m.nome
+    LEFT JOIN estoque_materiais em ON em.nome_material = m.nome
      WHERE ip.codPedido = ?
     GROUP BY pm.codMaterial, em.id, em.nome_material, em.unidade_medida
     ORDER BY em.nome_material ASC`,
@@ -1502,13 +1494,13 @@ router.post(
   apenasAdmin,
   async (req, res) => {
     const codPedido = Number(req.params.id);
-    const valorFrete = converterValorMonetario(req.body.valorFrete);
+    const valorFreteInformado = converterValorMonetario(req.body.valorFrete);
     const valorMaoDeObra = converterValorMonetario(req.body.valorMaoDeObra);
     const mensagemOrcamento = String(req.body.mensagemOrcamento || "").trim();
     if (
       !Number.isSafeInteger(codPedido) ||
       codPedido <= 0 ||
-      valorFrete === null ||
+      valorFreteInformado === null ||
       valorMaoDeObra === null ||
       mensagemOrcamento.length > 3000
     ) {
@@ -1520,7 +1512,7 @@ router.post(
       await db.schemaAgendaPronto;
       await connection.beginTransaction();
       const [pedidos] = await connection.query(
-        "SELECT valorTotal, status, statusOrcamento FROM pedido WHERE codPedido = ? FOR UPDATE",
+        "SELECT valorTotal, status, statusOrcamento, freteGratisEstimado FROM pedido WHERE codPedido = ? FOR UPDATE",
         [codPedido],
       );
       if (!pedidos.length) {
@@ -1536,6 +1528,9 @@ router.post(
         return res.status(409).send("Este orçamento já foi enviado.");
       }
 
+      const valorFrete = pedidos[0].freteGratisEstimado
+        ? 0
+        : valorFreteInformado;
       const custoMateriais = await calcularCustoMateriais(connection, codPedido);
       const [[{ subtotalItens }]] = await connection.query(
         `SELECT COALESCE(SUM(quantidade * precoUnitario), 0) AS subtotalItens
@@ -1616,12 +1611,12 @@ router.post(
   apenasAdmin,
   async (req, res) => {
     const codPedido = Number(req.params.id);
-    const valorFrete = converterValorMonetario(req.body.valorFrete);
+    const valorFreteInformado = converterValorMonetario(req.body.valorFrete);
     const valorMaoDeObra = converterValorMonetario(req.body.valorMaoDeObra);
     if (
       !Number.isSafeInteger(codPedido) ||
       codPedido <= 0 ||
-      valorFrete === null ||
+      valorFreteInformado === null ||
       valorMaoDeObra === null
     ) {
       return res.status(400).json({ erro: "Pedido ou valores inválidos." });
@@ -1663,7 +1658,6 @@ router.post(
       if (!Number.isFinite(valorBase) || valorBase <= 0) {
         return res.status(409).json({ erro: "Este pedido não possui itens com valor válido." });
       }
-      const valorTotal = Number((valorBase + valorMaoDeObra + valorFrete).toFixed(2));
       const fretePreVerificado = pedidos[0].valorFreteEstimado === null
         ? null
         : {
@@ -1671,6 +1665,10 @@ router.post(
             prazoDias: pedidos[0].prazoFreteEstimado,
             gratis: Boolean(pedidos[0].freteGratisEstimado),
           };
+      const valorFrete = pedidos[0].freteGratisEstimado
+        ? 0
+        : valorFreteInformado;
+      const valorTotal = Number((valorBase + valorMaoDeObra + valorFrete).toFixed(2));
       const dadosAnonimos = {
         itens: itens.map((item) => ({
           produto: item.nomeProduto,
@@ -2430,10 +2428,10 @@ router.post(
       }
 
       const statusAtual = pedidosAtuais[0].status;
-      if (tipoUsuario === "estofador" && novoStatus === "Pronto") {
+      if (novoStatus === "Pronto") {
         if (statusAtual === "Pronto") {
           await connection.rollback();
-          return res.redirect("/estofador-dashboard");
+          return res.redirect(tipoUsuario === "estofador" ? "/estofador-dashboard" : "/admin/producao");
         }
         if (statusAtual !== "Em Produção") {
           await connection.rollback();

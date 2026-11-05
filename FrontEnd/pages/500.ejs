@@ -91,9 +91,6 @@
                                             </strong>.</p>
                                         <% } %>
 
-                                            <p>Tentando recarregar a página automaticamente em <span
-                                                    id="contador">10</span> segundos...</p>
-
                                             <div class="actions">
                                                 <button onclick="window.location.reload();"
                                                     class="link_404 btn_retry">Tentar Novamente</button>
@@ -106,26 +103,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Script de Tentativa de Recarregamento Automático -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            let tempoRestante = 10; // Tempo em segundos antes de tentar recarregar
-            const elementoContador = document.getElementById("contador");
-
-            const intervalo = setInterval(() => {
-                tempoRestante--;
-                if (elementoContador) {
-                    elementoContador.textContent = tempoRestante;
-                }
-
-                if (tempoRestante <= 0) {
-                    clearInterval(intervalo);
-                    window.location.reload(); // Recarrega a página atual para tentar novamente
-                }
-            }, 1000);
-        });
-    </script>
 
 </body>
 

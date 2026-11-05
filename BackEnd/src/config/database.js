@@ -368,15 +368,18 @@ async function prepararSchemaNotificacoes() {
 }
 
 pool.schemaPromocoesPronto = prepararSchemaPromocoes();
-pool.schemaEstoquePronto = prepararSchemaEstoque();
+pool.schemaEstoquePronto = pool.schemaPromocoesPronto.then(prepararSchemaEstoque);
 pool.schemaAgendaPronto = pool.schemaEstoquePronto.then(prepararSchemaAgenda);
 pool.schemaNotificacoesPronto = pool.schemaAgendaPronto.then(prepararSchemaNotificacoes);
+pool.schemaNotificacoesPronto.catch((err) => {
+    console.error('Erro crítico ao preparar os schemas do banco de dados:', err.message);
+});
 
 pool.getConnection()
     .then(async (conn) => {
         console.log('Conexão com o banco MySQL realizada com sucesso!');
         conn.release();
-        await Promise.all([pool.schemaPromocoesPronto, pool.schemaEstoquePronto, pool.schemaAgendaPronto, pool.schemaNotificacoesPronto]);
+        await pool.schemaNotificacoesPronto;
         console.log('Schemas de promoções, estoque, agenda e notificações verificados com sucesso.');
     })
     .catch(err => {

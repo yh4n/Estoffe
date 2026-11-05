@@ -248,7 +248,7 @@
               <label for="valorFrete" class="block text-xs font-semibold text-gray-500">
                 FRETE DA PROPOSTA
                 <input type="number" name="valorFrete" id="valorFrete" min="0" max="1000000" step="0.01"
-                  value="<%= Number(pedido.valorFreteEstimado ?? pedido.valorFrete ?? 0).toFixed(2) %>" required
+                  value="<%= pedido.freteGratisEstimado ? '0.00' : Number(pedido.valorFreteEstimado ?? pedido.valorFrete ?? 0).toFixed(2) %>" required <%= pedido.freteGratisEstimado ? 'readonly' : '' %>
                   class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
                 <% if (pedido.valorFreteEstimado !== null && pedido.valorFreteEstimado !== undefined) { %>
                   <span class="mt-1 block font-normal normal-case text-blue-700">Prévia do sistema: <%= pedido.freteGratisEstimado ? 'grátis (cupom)' : `R$ ${Number(pedido.valorFreteEstimado).toFixed(2).replace('.', ',')}` %></span>

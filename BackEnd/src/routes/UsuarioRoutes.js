@@ -15,6 +15,25 @@ const {
 const jwt = require("jsonwebtoken");
 const transportador = require("../config/mailer");
 
+function urlApiAsaas(caminho) {
+  let base = String(process.env.ASAAS_API_URL || "").trim();
+  if (!base) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ASAAS_API_URL precisa apontar para a API de produção.");
+    }
+    base = "https://api-sandbox.asaas.com/v3";
+  }
+  const url = new URL(base);
+  if (
+    url.protocol !== "https:" ||
+    !["api.asaas.com", "api-sandbox.asaas.com"].includes(url.hostname) ||
+    (process.env.NODE_ENV === "production" && url.hostname !== "api.asaas.com")
+  ) {
+    throw new Error("ASAAS_API_URL deve usar o endpoint HTTPS adequado ao ambiente.");
+  }
+  return `${base.replace(/\/+$/, "")}/${String(caminho).replace(/^\/+/, "")}`;
+}
+
 function pagamentoTesteAtivo() {
   return (
     process.env.NODE_ENV !== "production" &&
@@ -284,13 +303,19 @@ const limitadorLogin = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-const limitadorFormularioPublico = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: "Muitas solicitações. Tente novamente em alguns minutos.",
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const criarLimitadorFormularioPublico = (max = 5) =>
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max,
+    message: "Muitas solicitações. Tente novamente em alguns minutos.",
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+const limitadorContato = criarLimitadorFormularioPublico();
+const limitadorOrcamento = criarLimitadorFormularioPublico();
+const limitadorRegistro = criarLimitadorFormularioPublico(10);
+const limitadorRecuperacao = criarLimitadorFormularioPublico();
+const limitadorRedefinicao = criarLimitadorFormularioPublico();
 const escaparHtml = (valor) => String(valor).replace(/[&<>"']/g, (caractere) => ({
   "&": "&amp;",
   "<": "&lt;",
@@ -306,7 +331,7 @@ const regenerarSessao = (req) =>
     });
   });
 
-router.post("/contato/enviar", limitadorFormularioPublico, async (req, res) => {
+router.post("/contato/enviar", limitadorContato, async (req, res) => {
   const nome = String(req.body.nome || "").trim();
   const email = String(req.body.email || "").trim();
   const mensagem = String(req.body.mensagem || "").trim();
@@ -337,7 +362,7 @@ router.post("/contato/enviar", limitadorFormularioPublico, async (req, res) => {
   }
 });
 
-router.post("/orcamento-sob-medida/enviar", limitadorFormularioPublico, async (req, res) => {
+router.post("/orcamento-sob-medida/enviar", limitadorOrcamento, async (req, res) => {
   const nome = String(req.body.nome || "").trim();
   const email = String(req.body.email || "").trim();
   const telefone = String(req.body.telefone || "").trim();
@@ -390,7 +415,12 @@ router.post("/orcamento-sob-medida/enviar", limitadorFormularioPublico, async (r
 // ==========================================
 
 router.get("/login", (req, res) => {
-  res.render("login", { error: null, email: "" });
+  const erroGoogle = {
+    google_falhou: "Não foi possível entrar com o Google. Tente novamente.",
+    google_sem_usuario: "O Google não retornou uma conta válida.",
+    google_state_invalido: "A tentativa de login expirou. Tente novamente.",
+  }[req.query.error] || null;
+  res.render("login", { error: erroGoogle, email: "" });
 });
 
 router.post("/login", limitadorLogin, async (req, res) => {
@@ -498,15 +528,48 @@ router.post(
 
 router.get(
   "/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false,
-  }),
+  (req, res, next) => {
+    const state = crypto.randomBytes(32).toString("hex");
+    req.session.googleOAuthState = state;
+    req.session.save((error) => {
+      if (error) {
+        console.error("Erro ao salvar o estado OAuth do Google:", error);
+        return res.status(500).send("Não foi possível iniciar o login com Google.");
+      }
+      passport.authenticate("google", {
+        scope: ["profile", "email"],
+        state,
+        session: false,
+      })(req, res, next);
+    });
+  },
 );
 
 router.get(
   "/auth/google/callback",
   (req, res, next) => {
+    const recebido = String(req.query.state || "");
+    const esperado = String(req.session.googleOAuthState || "");
+    delete req.session.googleOAuthState;
+    const estadosHexadecimais =
+      /^[a-f0-9]{64}$/i.test(recebido) && /^[a-f0-9]{64}$/.test(esperado);
+    if (
+      !estadosHexadecimais ||
+      !crypto.timingSafeEqual(Buffer.from(recebido), Buffer.from(esperado))
+    ) {
+      return req.session.save((error) => {
+        if (error) {
+          console.error("Erro ao descartar estado OAuth inválido:", error);
+          return res.status(500).send("Não foi possível validar o login com Google.");
+        }
+        return res.redirect("/login?error=google_state_invalido");
+      });
+    }
+    return req.session.save((error) => {
+      if (error) {
+        console.error("Erro ao atualizar estado OAuth:", error);
+        return res.status(500).send("Não foi possível validar o login com Google.");
+      }
     passport.authenticate(
       "google",
       { session: false },
@@ -522,34 +585,45 @@ router.get(
         next();
       },
     )(req, res, next);
+    });
   },
   (req, res) => {
     const usuarioGoogle = req.user;
 
-    const token = jwt.sign(
-      { codUsuario: usuarioGoogle.codUsuario, tipo: usuarioGoogle.tipo },
-      SECRET_KEY,
-      { expiresIn: "1h" },
-    );
-
-    req.session.usuario = {
-      codUsuario: usuarioGoogle.codUsuario,
-      nome: usuarioGoogle.nome,
-      email: usuarioGoogle.email,
-      tipo: usuarioGoogle.tipo,
-      token: token,
-    };
-
-    switch (usuarioGoogle.tipo) {
-      case "admin":
-        return res.redirect("/admin-dashboard");
-      case "estofador":
-        return res.redirect("/estofador-dashboard");
-      case "cliente":
-        return res.redirect("/carrinho?sincronizarOffline=1");
-      default:
-        return res.redirect("/");
-    }
+    req.session.regenerate((error) => {
+      if (error) {
+        console.error("Erro ao regenerar sessão do login Google:", error);
+        return res.redirect("/login?error=google_falhou");
+      }
+      const token = jwt.sign(
+        { codUsuario: usuarioGoogle.codUsuario, tipo: usuarioGoogle.tipo },
+        SECRET_KEY,
+        { expiresIn: "1h" },
+      );
+      req.session.usuario = {
+        codUsuario: usuarioGoogle.codUsuario,
+        nome: usuarioGoogle.nome,
+        email: usuarioGoogle.email,
+        tipo: usuarioGoogle.tipo,
+        token,
+      };
+      req.session.save((saveError) => {
+        if (saveError) {
+          console.error("Erro ao salvar sessão do login Google:", saveError);
+          return res.redirect("/login?error=google_falhou");
+        }
+        switch (usuarioGoogle.tipo) {
+          case "admin":
+            return res.redirect("/admin-dashboard");
+          case "estofador":
+            return res.redirect("/estofador-dashboard");
+          case "cliente":
+            return res.redirect("/carrinho?sincronizarOffline=1");
+          default:
+            return res.redirect("/");
+        }
+      });
+    });
   },
 );
 
@@ -557,11 +631,12 @@ router.get("/register", (req, res) => {
   res.render("register", {
     usuario: req.session.usuario || null,
     error: null,
+    dadosFormulario: null,
     csrfToken: req.csrfToken ? req.csrfToken() : null,
   });
 });
 
-router.post("/register", limitadorFormularioPublico, async (req, res) => {
+router.post("/register", limitadorRegistro, async (req, res) => {
   console.log(">>> Requisição POST /register recebida com sucesso!");
   const {
     nome,
@@ -578,11 +653,26 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
     cidade,
     uf,
   } = req.body;
+  const dadosFormulario = {
+    nome,
+    email,
+    telefone,
+    cpfCnpj,
+    cep,
+    numero,
+    rua,
+    bairro,
+    complemento,
+    cidade,
+    uf,
+  };
+  const cpfLimpo = String(cpfCnpj || "").replace(/\D/g, "");
 
   if (!nome?.trim() || !email?.trim() || !novaSenha) {
     return res.render("register", {
       usuario: null,
       error: "Preencha todos os campos obrigatórios.",
+      dadosFormulario,
     });
   }
 
@@ -590,6 +680,7 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
     return res.render("register", {
       usuario: null,
       error: "As senhas não coincidem.",
+      dadosFormulario,
     });
   }
 
@@ -597,6 +688,15 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
     return res.render("register", {
       usuario: null,
       error: "A senha deve ter no mínimo 8 caracteres.",
+      dadosFormulario,
+    });
+  }
+
+  if (!validarCpfCnpj(cpfLimpo)) {
+    return res.render("register", {
+      usuario: null,
+      error: "Informe um CPF ou CNPJ válido.",
+      dadosFormulario,
     });
   }
 
@@ -616,6 +716,7 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
       return res.render("register", {
         usuario: null,
         error: "Já existe uma conta cadastrada com este e-mail.",
+        dadosFormulario,
       });
     }
 
@@ -631,8 +732,6 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
     const enderecoCompleto = `${rua}, Nº ${numero}${
       complemento ? " - " + complemento : ""
     }. Bairro: ${bairro}. ${cidade}-${uf}. CEP: ${cep}`;
-    const cpfLimpo = cpfCnpj ? cpfCnpj.replace(/\D/g, "") : null;
-
     await connection.query(
       "INSERT INTO cliente (codUsuario, telefone, endereco, cpfCnpj, cep) VALUES (?, ?, ?, ?, ?)",
       [
@@ -659,12 +758,14 @@ router.post("/register", limitadorFormularioPublico, async (req, res) => {
       return res.render("register", {
         usuario: null,
         error: "Já existe uma conta cadastrada com este e-mail.",
+        dadosFormulario,
       });
     }
 
     return res.render("register", {
       usuario: null,
       error: "Erro interno ao processar o cadastro. Tente novamente.",
+      dadosFormulario,
     });
   }
 });
@@ -730,11 +831,12 @@ router.post("/atualizar-usuario", verificarAutenticacao(["cliente"]), async (req
     return res.render("register", {
       usuario: null,
       error: "Erro interno ao processar atualização no banco de dados.",
+      dadosFormulario: null,
     });
   }
 });
 
-router.get("/logout", (req, res) => {
+router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).send("Erro ao sair.");
     res.clearCookie("connect.sid");
@@ -750,7 +852,7 @@ router.get("/forgot-password", (req, res) => {
   res.render("forgot-password", { error: null, success: null });
 });
 
-router.post("/forgot-password", limitadorFormularioPublico, async (req, res) => {
+router.post("/forgot-password", limitadorRecuperacao, async (req, res) => {
   const { email } = req.body;
   try {
     const [usuarios] = await db.query(
@@ -876,7 +978,7 @@ router.get(["/reset-password", "/redefinir-senha/:token"], async (req, res) => {
   }
 });
 
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", limitadorRedefinicao, async (req, res) => {
   const { token, novaSenha, confirmarSenha } = req.body;
 
   if (typeof novaSenha !== "string" || novaSenha.length < 8) {
@@ -914,8 +1016,8 @@ router.post("/reset-password", async (req, res) => {
       email,
     ]);
 
-    await db.query("UPDATE recuperacao_senha SET usado = 1 WHERE token = ?", [
-      token,
+    await db.query("UPDATE recuperacao_senha SET usado = 1 WHERE email = ?", [
+      email,
     ]);
 
     return res.render("reset-password", {
@@ -1288,7 +1390,7 @@ router.post(
           }
 
           const respostaNovoCliente = await axios.post(
-            "https://api-sandbox.asaas.com/v3/customers",
+            urlApiAsaas("customers"),
             {
               name: clientes[0].nome,
               email: clientes[0].email,
@@ -1319,7 +1421,7 @@ router.post(
 
       console.log(`Solicitando Pix para o cliente Asaas: ${idClienteAsaas}`);
       const respostaAsaas = await axios.post(
-        "https://api-sandbox.asaas.com/v3/payments",
+        urlApiAsaas("payments"),
         {
           customer: idClienteAsaas,
           billingType: "PIX",
@@ -1338,7 +1440,7 @@ router.post(
       console.log(`Buscando QR Code do Pix para o pagamento: ${idPagamento}`);
 
       const respostaQrCode = await axios.get(
-        `https://api-sandbox.asaas.com/v3/payments/${idPagamento}/pixQrCode`,
+        urlApiAsaas(`payments/${encodeURIComponent(idPagamento)}/pixQrCode`),
         {
           headers: { access_token: tokenAsaas },
         },
@@ -1525,7 +1627,7 @@ router.post(
           });
         }
         const respostaCliente = await axios.post(
-          "https://api-sandbox.asaas.com/v3/customers",
+          urlApiAsaas("customers"),
           {
             name: pedido.nome,
             email: pedido.email,
@@ -1547,7 +1649,7 @@ router.post(
       let idPagamento = pagamentos[0]?.asaasPaymentId;
       if (!idPagamento) {
         const respostaPagamento = await axios.post(
-          "https://api-sandbox.asaas.com/v3/payments",
+          urlApiAsaas("payments"),
           {
             customer: idAsaas,
             billingType: "PIX",
@@ -1570,7 +1672,7 @@ router.post(
       }
 
       const respostaQrCode = await axios.get(
-        `https://api-sandbox.asaas.com/v3/payments/${idPagamento}/pixQrCode`,
+        urlApiAsaas(`payments/${encodeURIComponent(idPagamento)}/pixQrCode`),
         { headers: { access_token: tokenAsaas } },
       );
       req.session.dadosPagamento = {
@@ -1599,14 +1701,39 @@ router.post(
 router.get(
   "/pedido/pagamento",
   verificarAutenticacao(["cliente"]),
-  (req, res) => {
+  async (req, res) => {
     const pagamento = req.session.dadosPagamento;
 
     if (!pagamento) {
       return res.redirect("/client-dashboard");
     }
 
-    res.render("pagamento", { pagamento: pagamento });
+    try {
+      const [pagamentos] = await db.query(
+        `SELECT pg.status
+           FROM pedido p
+           INNER JOIN cliente c ON c.codCliente = p.codCliente
+           LEFT JOIN pagamento pg ON pg.codPedido = p.codPedido
+          WHERE p.codPedido = ? AND c.codUsuario = ?
+          ORDER BY pg.codPagamento DESC
+          LIMIT 1`,
+        [pagamento.idPedido, req.session.usuario.codUsuario],
+      );
+      if (
+        !pagamentos.length ||
+        pagamentos[0].status === "Aprovado"
+      ) {
+        delete req.session.dadosPagamento;
+        return res.redirect("/client-dashboard");
+      }
+      res.render("pagamento", {
+        pagamento,
+        usuario: req.session.usuario,
+      });
+    } catch (error) {
+      console.error("Erro ao validar o pagamento pendente:", error);
+      return res.status(500).send("Não foi possível carregar o pagamento.");
+    }
   },
 );
 
@@ -1694,6 +1821,28 @@ router.get(
         [usuarioLogado.codUsuario],
       );
 
+      const pagamentoDaSessao = req.session.dadosPagamento;
+      if (Number.isSafeInteger(Number(pagamentoDaSessao?.idPedido))) {
+        const [pagamentosSessao] = await db.query(
+          `SELECT p.status AS statusPedido, pg.status AS statusPagamento
+             FROM pedido p
+             LEFT JOIN pagamento pg ON pg.codPedido = p.codPedido
+            WHERE p.codPedido = ?
+            ORDER BY pg.codPagamento DESC
+            LIMIT 1`,
+          [Number(pagamentoDaSessao.idPedido)],
+        );
+        if (
+          !pagamentosSessao.length ||
+          ["Pago", "Cancelado", "Entregue"].includes(pagamentosSessao[0].statusPedido) ||
+          pagamentosSessao[0].statusPagamento === "Aprovado"
+        ) {
+          delete req.session.dadosPagamento;
+        }
+      } else if (pagamentoDaSessao) {
+        delete req.session.dadosPagamento;
+      }
+
       let pedidos = [];
       if (clientes.length > 0) {
         const codCliente = clientes[0].codCliente;
@@ -1780,6 +1929,7 @@ router.get("/perfil", verificarAutenticacao(["cliente"]), async (req, res) => {
       cpf: formatarCpfCnpj(dadosCliente.cpfCnpj),
       cep: formatarCep(cepCliente),
       error: req.query.error || null,
+      success: req.query.sucesso === "salvo",
     });
   } catch (error) {
     console.error("Erro ao carregar o perfil do cliente:", error);
@@ -1801,6 +1951,14 @@ router.post(
     if (cpfLimpo && !validarCpfCnpj(cpfLimpo)) {
       return res.redirect("/perfil?error=cpf_invalido");
     }
+    if (novaSenha && novaSenha.trim() !== "") {
+      if (novaSenha.length < 8) {
+        return res.redirect("/perfil?error=senha_curta");
+      }
+      if (novaSenha !== confirmarSenha) {
+        return res.redirect("/perfil?error=senhas_diferentes");
+      }
+    }
 
     try {
       await db.query("UPDATE usuario SET nome = ? WHERE codUsuario = ?", [
@@ -1820,8 +1978,6 @@ router.post(
       req.session.usuario.nome = nome;
 
       if (novaSenha && novaSenha.trim() !== "") {
-        if (novaSenha !== confirmarSenha)
-          return res.redirect("/perfil?error=senhas_diferentes");
         const novaSenhaHash = await bcrypt.hash(novaSenha, 10);
         await db.query("UPDATE usuario SET senha = ? WHERE codUsuario = ?", [
           novaSenhaHash,
@@ -1846,7 +2002,7 @@ router.post(
         });
       }
 
-      res.redirect("/perfil");
+      res.redirect("/perfil?sucesso=salvo");
     } catch (error) {
       console.error(error);
       res.status(500).send("Erro interno.");

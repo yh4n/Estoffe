@@ -82,8 +82,8 @@
                 <p>Olá, <strong><%= usuario.nome || usuario.email || 'Usuário' %></strong>!</p>
               <% } %>
 
-              <p>Você será redirecionado para a página inicial em <span id="contador">10</span> segundos...</p>
-              
+              <p>Use o link abaixo para voltar à página inicial.</p>
+
               <a href="/" class="link_404">Ir para a Página Inicial</a>
             </div>
 
@@ -92,26 +92,6 @@
       </div>
     </div>
   </section>
-
-  <!-- Script de Redirecionamento Automático -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      let tempoRestante = 10; // Tempo em segundos antes de redirecionar
-      const elementoContador = document.getElementById("contador");
-
-      const intervalo = setInterval(() => {
-        tempoRestante--;
-        if (elementoContador) {
-          elementoContador.textContent = tempoRestante;
-        }
-
-        if (tempoRestante <= 0) {
-          clearInterval(intervalo);
-          window.location.href = "/"; // Redireciona para a home
-        }
-      }, 1000);
-    });
-  </script>
 
 </body>
 </html>

@@ -30,7 +30,7 @@
         <% if (decisaoOrcamento) { %>
             <div role="status" class="mb-6 flex gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
                 <i class="bi bi-check-circle mt-0.5 text-lg" aria-hidden="true"></i>
-                <p>Sua decisão de <%= decisaoOrcamento.toLowerCase() %> o orçamento foi registrada.</p>
+                <p>Sua decisão de <%= decisaoOrcamento === 'aprovado' ? 'aprovar' : 'recusar' %> o orçamento foi registrada.</p>
             </div>
         <% } %>
         <% if (notificacaoOrcamento === 'erro') { %>

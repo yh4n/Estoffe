@@ -128,6 +128,7 @@ router.get(
            FROM pedido p
           WHERE p.codCliente = ?
             AND p.status = 'Aguardando Pagamento'
+            AND p.statusOrcamento = 'Aprovado'
             AND NOT EXISTS (
               SELECT 1 FROM pagamento pg
                WHERE pg.codPedido = p.codPedido AND pg.status = 'Aprovado'
@@ -273,6 +274,9 @@ router.post(
       );
 
       if (itemExistente.length > 0) {
+        if (Number(itemExistente[0].quantidade) >= 99) {
+          return res.status(409).send("Cada produto pode ter no máximo 99 unidades no carrinho.");
+        }
         await db.query(
           "UPDATE carrinho SET quantidade = quantidade + 1 WHERE codCliente = ? AND codProduto = ?",
           [codCliente, codProduto],
@@ -307,7 +311,13 @@ router.post(
   verificarAutenticacao(["cliente"]),
   async (req, res) => {
     const codProduto = req.params.id;
-    const novaQuantidade = parseInt(req.body.quantidade, 10);
+    const quantidadeInformada = Number(req.body.quantidade);
+    const novaQuantidade = Number.isSafeInteger(quantidadeInformada)
+      ? quantidadeInformada
+      : NaN;
+    if (!Number.isSafeInteger(novaQuantidade) || novaQuantidade < 0 || novaQuantidade > 99) {
+      return res.status(400).send("Informe uma quantidade entre 0 e 99.");
+    }
 
     try {
       const codCliente = await buscarCodCliente(req.session.usuario.codUsuario);
@@ -317,7 +327,7 @@ router.post(
       }
 
       // Quantidade zero ou inválida remove o item do carrinho
-      if (!novaQuantidade || novaQuantidade <= 0) {
+      if (novaQuantidade === 0) {
         await db.query(
           "DELETE FROM carrinho WHERE codCliente = ? AND codProduto = ?",
           [codCliente, codProduto],

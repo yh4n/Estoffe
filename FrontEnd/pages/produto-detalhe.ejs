@@ -80,7 +80,7 @@
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4"><%= produto.nome %></h1>
 
                     <div class="mb-5">
-                        <% if (produto.promocao_ativa && produto.preco_atual < produto.preco) { %>
+                        <% if (produto.promocao_ativa && Number(produto.preco_atual) < Number(produto.preco)) { %>
                             <div class="flex items-center gap-3 flex-wrap">
                                 <span class="text-gray-400 line-through text-lg">R$ <%= Number(produto.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
                                 <span class="text-3xl font-extrabold text-red-700">R$ <%= Number(produto.preco_atual).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) %></span>
@@ -108,7 +108,7 @@
                         </div>
                     <% } %>
 
-                    <form action="/carrinho/add/<%= produto.codProduto %>" method="POST" data-purchase-container data-offline-cart-form data-authenticated="<%= usuario && usuario.tipo === 'cliente' ? 'true' : 'false' %>" data-product-id="<%= produto.codProduto %>">
+                    <form action="/carrinho/add/<%= produto.codProduto %>" method="POST" data-purchase-container data-offline-cart-form data-authenticated="<%= usuario ? 'true' : 'false' %>" data-product-id="<%= produto.codProduto %>">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-green-950 hover:bg-green-800 text-white font-semibold px-6 py-3 rounded-sm uppercase tracking-wider text-xs transition-colors duration-300">
                             <i class="bi bi-bag-plus"></i> <%= produto.sob_medida ? 'Comprar' : 'Colocar no Carrinho' %>

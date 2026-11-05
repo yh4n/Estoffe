@@ -22,6 +22,15 @@ passport.use(
           // código OAuth (invalid_grant em cascata).
           return done(null, false, { message: "Google não retornou um e-mail válido." });
         }
+        if (
+          profile._json?.email_verified !== true &&
+          profile._json?.verified_email !== true &&
+          profile.emails?.[0]?.verified !== true
+        ) {
+          return done(null, false, {
+            message: "O Google não confirmou que o e-mail pertence a esta conta.",
+          });
+        }
 
         // 1. Verifica se já existe um usuário com esse e-mail
         const [usuariosExistentes] = await db.query(

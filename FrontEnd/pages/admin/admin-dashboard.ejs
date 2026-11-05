@@ -91,14 +91,25 @@
         </label>
         <label class="text-xs font-semibold text-gray-600">Mensagem da oferta
           <textarea required maxlength="1000" name="mensagem" rows="2" placeholder="Conte aos clientes sobre a oferta..."
-            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
-          </textarea>
+            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"></textarea>
         </label>
         <button type="submit" class="rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600">
           <i class="bi bi-send mr-1" aria-hidden="true"></i>Divulgar oferta
         </button>
       </form>
     </section>
+    <script>
+      const formularioOferta = document.querySelector('form[action="/admin/notificacoes/oferta"]');
+      const mensagemOferta = formularioOferta?.querySelector('textarea[name="mensagem"]');
+      mensagemOferta?.addEventListener("input", () => mensagemOferta.setCustomValidity(""));
+      formularioOferta?.addEventListener("submit", (event) => {
+        if (mensagemOferta && !mensagemOferta.value.trim()) {
+          event.preventDefault();
+          mensagemOferta.setCustomValidity("Escreva uma mensagem antes de divulgar a oferta.");
+          mensagemOferta.reportValidity();
+        }
+      });
+    </script>
 
 
     <section class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">

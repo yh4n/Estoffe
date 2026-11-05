@@ -1,6 +1,6 @@
 # .gitignore
 .env
-.env.example
+!.env.example
 client_secret_*.json
 *.sql
 !migrations/20261027_estoque_produtos_catalogo.sql

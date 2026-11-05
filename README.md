@@ -24,13 +24,13 @@ Plataforma web de uma estofaria para apresentar produtos, receber pedidos e orca
    npm install
    ```
 
-2. Crie um banco MySQL e importe `estoffe.sql`. O arquivo inclui a estrutura principal e dados de demonstracao.
+2. Crie um banco MySQL. O dump local `estoffe.sql` nao e distribuido pelo repositorio porque pode conter dados; use somente uma exportacao de estrutura (sem dados pessoais) obtida do responsavel pelo projeto.
 
    ```sql
    CREATE DATABASE estoffe CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
    ```
 
-   Depois importe o arquivo usando seu cliente MySQL, por exemplo `mysql -u usuario -p estoffe < estoffe.sql`.
+   Importe a exportacao segura de estrutura com seu cliente MySQL antes de iniciar a aplicacao.
 
 3. Crie um arquivo `.env` na raiz do projeto. Exemplo:
 
@@ -51,6 +51,7 @@ Plataforma web de uma estofaria para apresentar produtos, receber pedidos e orca
    APP_URL=http://localhost:3005
    GEMINI_API_KEY=
    GEMINI_MODEL=gemini-2.5-flash
+   ASAAS_API_URL=https://api-sandbox.asaas.com/v3
    ASAAS_TOKEN=
    ASAAS_WEBHOOK_TOKEN=
    GOOGLE_CLIENT_ID=
@@ -58,7 +59,9 @@ Plataforma web de uma estofaria para apresentar produtos, receber pedidos e orca
    GOOGLE_CALLBACK_URL=http://localhost:3005/auth/google/callback
    ```
 
-   `JWT_SECRET` e obrigatoria para iniciar o servidor. Configure tambem um `SESSION_SECRET` forte, especialmente em producao. Credenciais e chaves devem ficar somente no `.env`, nunca no codigo ou em commits.
+   O arquivo versionado `.env.example` contem apenas nomes de variaveis e placeholders. Nunca copie credenciais reais para esse arquivo. Se credenciais reais ja foram publicadas, revogue-as e emita novas chaves nos respectivos provedores.
+
+   `JWT_SECRET` e obrigatoria para iniciar o servidor. Configure tambem um `SESSION_SECRET` forte, especialmente em producao. Credenciais e chaves devem ficar somente no `.env`, nunca no codigo ou em commits. O armazenamento de sessao atual e em memoria; antes de producao, substitua-o por um store persistente e configure `trust proxy` somente se a aplicacao estiver atras de um proxy confiavel.
 
 4. Inicie o servidor:
 
@@ -68,7 +71,7 @@ Plataforma web de uma estofaria para apresentar produtos, receber pedidos e orca
 
    Abra `http://localhost:3005`. Para iniciar sem o reinicio automatico do Nodemon, use `npm start`.
 
-Ao iniciar, a aplicacao verifica e prepara tabelas/colunas auxiliares para estoque, promocoes, agenda, notificacoes e fotos de acompanhamento. As migracoes SQL correspondentes ficam em `migrations/`; em instalacoes novas, confira tambem `estoffe.sql`.
+Ao iniciar, a aplicacao verifica e prepara tabelas/colunas auxiliares para estoque, promocoes, agenda, notificacoes e fotos de acompanhamento. As migracoes SQL correspondentes ficam em `migrations/`. A estrutura principal precisa ser provisionada separadamente com um dump seguro, sem dados pessoais.
 
 ## Como usar
 
@@ -108,7 +111,7 @@ As notificacoes da conta tambem podem ser acessadas pelo link **Notificacoes** n
 
 Defina `GEMINI_API_KEY` para habilitar as sugestoes de descricao de produto e os rascunhos de orcamento. `GEMINI_MODEL` e opcional; o padrao e `gemini-2.5-flash`. Se a chave nao estiver configurada, os formularios continuam utilizaveis sem IA. O administrador deve sempre validar as sugestoes antes de salvar ou enviar.
 
-No orcamento, a aplicacao estima materiais conhecidos a partir da composicao cadastrada e dos custos de material; custos ou composicoes ausentes tornam a estimativa parcial. O frete consultado no carrinho e uma referencia, que o administrador pode confirmar ou ajustar. O total da proposta combina itens, mao de obra/margem e frete, e o cliente recebe uma previa por e-mail e no painel. Em bases existentes, as colunas de orcamento e frete sao preparadas na inicializacao; as alteracoes tambem estao em `migrations/20261023_orcamento_ia.sql` e `migrations/20261023_previsao_frete.sql`.
+No orcamento, a aplicacao estima materiais conhecidos a partir da composicao cadastrada e dos custos de material; custos ou composicoes ausentes tornam a estimativa parcial. O frete consultado no carrinho e uma referencia, que o administrador pode confirmar ou ajustar, exceto quando o cupom concede frete gratis, que permanece zerado. O total da proposta combina itens, mao de obra/margem e frete, e o cliente recebe uma previa por e-mail e no painel. Em bases existentes, as colunas de orcamento e frete sao preparadas na inicializacao; as alteracoes tambem estao em `migrations/20261023_orcamento_ia.sql` e `migrations/20261023_previsao_frete.sql`.
 
 ### E-mail
 
@@ -116,7 +119,7 @@ Configure `EMAIL_USER` e `EMAIL_PASS` para e-mails de pedidos, orcamentos e agen
 
 ### Pagamentos
 
-Para pagamentos reais, configure `ASAAS_TOKEN` e os dados de webhook (`ASAAS_WEBHOOK_TOKEN`) conforme a integracao Asaas. Para testes locais sem cobranca, defina `SIMULAR_PAGAMENTO=true`; isso aprova o pagamento localmente e atualiza o estoque sem chamar o Asaas. A simulacao e ignorada automaticamente quando `NODE_ENV=production`.
+Para pagamentos reais, configure `ASAAS_API_URL=https://api.asaas.com/v3`, `ASAAS_TOKEN` e os dados de webhook (`ASAAS_WEBHOOK_TOKEN`) conforme a integracao Asaas. Em desenvolvimento, a URL padrao e o sandbox (`https://api-sandbox.asaas.com/v3`). Para testes locais sem cobranca, defina `SIMULAR_PAGAMENTO=true`; isso aprova o pagamento localmente e atualiza o estoque sem chamar o Asaas. A simulacao e ignorada automaticamente quando `NODE_ENV=production`.
 
 ### Login Google
 

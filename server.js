@@ -62,7 +62,13 @@ app.use(
 app.use(passport.initialize());
 
 // CSRF Protection (Configurado após express-session e cookie-parser)
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  },
+});
 app.use((req, res, next) => {
   const uploadMultipartAutenticado =
     req.method === "POST" &&
@@ -123,8 +129,23 @@ app.use(async (req, res, next) => {
 // 3. ROTAS PÚBLICAS (GET)
 // ==========================================
 
-app.get("/", (req, res) => {
-  res.render("index", { usuario: req.session?.usuario || null });
+app.get("/", async (req, res) => {
+  let produtosHome = {};
+  try {
+    const [produtos] = await db.query(
+      "SELECT codProduto, nome FROM produto WHERE nome IN (?, ?, ?)",
+      ["Cabeceira Atelier", "Sofá Minimalist Linho", "Puff Orgânico Drop"],
+    );
+    produtosHome = Object.fromEntries(
+      produtos.map((produto) => [produto.nome, produto.codProduto]),
+    );
+  } catch (error) {
+    console.error("Erro ao localizar produtos em destaque na página inicial:", error);
+  }
+  res.render("index", {
+    usuario: req.session?.usuario || null,
+    produtosHome,
+  });
 });
 
 function normalizarCaminhoImagem(caminho) {
@@ -281,7 +302,10 @@ app.get("/sobre", (req, res) => {
 });
 
 app.get("/contato", (req, res) => {
-  res.render("contato", { usuario: req.session?.usuario || null });
+  res.render("contato", {
+    usuario: req.session?.usuario || null,
+    sucesso: req.query.sucesso === "true",
+  });
 });
 
 app.get("/orcamento-sob-medida", (req, res) => {

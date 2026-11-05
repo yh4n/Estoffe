@@ -95,8 +95,8 @@
                                                 </h3>
                                                 <span
                                                     class="text-right text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-sm tabular-nums">
-                                                    <% if (produto.promocao_ativa && produto.preco_atual <
-                                                        produto.preco) { %>
+                                                    <% if (produto.promocao_ativa && Number(produto.preco_atual) <
+                                                        Number(produto.preco)) { %>
                                                         <span class="block text-gray-400 line-through">R$ <%=
                                                                 Number(produto.preco).toLocaleString('pt-BR', {
                                                                 minimumFractionDigits: 2 }) %></span>
@@ -130,7 +130,7 @@
                                     <div class="p-6 pt-0" data-purchase-container>
                                         <form action="/carrinho/add/<%= produto.codProduto %>" method="POST"
                                             data-offline-cart-form
-                                            data-authenticated="<%= usuario && usuario.tipo === 'cliente' ? 'true' : 'false' %>"
+                                            data-authenticated="<%= usuario ? 'true' : 'false' %>"
                                             data-product-id="<%= produto.codProduto %>">
                                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <button type="submit"

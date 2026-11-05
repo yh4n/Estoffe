@@ -12,6 +12,7 @@
 </head>
 
 <body class="bg-gray-50 font-sans min-h-screen flex flex-col pt-24">
+    <%- include('_navbar') %>
 
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
         <div class="mb-8">
@@ -100,7 +101,7 @@
                                 <div
                                     class="bg-white border border-gray-100 p-4 rounded-sm shadow-sm flex flex-col sm:flex-row items-center gap-4 transition hover:shadow-md">
 
-                                    <img src="../<%= item.imagem %>" alt="<%= item.nome %>"
+                                    <img src="<%= /^(https?:|\/)/i.test(String(item.imagem || '')) ? item.imagem : `/${String(item.imagem || '').replace(/^(\.\.\/|\.\/)+/, '')}` %>" alt="<%= item.nome %>"
                                         class="w-24 h-24 object-cover rounded-sm bg-gray-50">
 
                                     <div class="flex-grow text-center sm:text-left">
@@ -201,7 +202,7 @@
                                 <label for="metragem" class="block text-sm font-semibold text-green-900 mb-1">
                                     Metragem (m²)
                                 </label>
-                                <input type="number" step="0.01" min="0.1" id="metragem" name="metragem"
+                                <input type="number" step="0.01" min="0.1" id="metragem" name="metragem" form="finalizarPedidoForm"
                                     placeholder="Opcional: ex. 2,50"
                                     class="block w-full px-3.5 py-2 bg-white border border-green-300 rounded-md text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-800 focus:border-transparent transition shadow-sm">
                             </div>
@@ -301,7 +302,7 @@
                                                         <div
                                                             class="flex justify-between text-base font-bold text-gray-900 pt-2">
                                                             <span>Total Estimado</span>
-                                                            <span class="text-xl text-green-950">
+                                                            <span id="totalEstimado" data-subtotal="<%= subtotalProdutos %>" data-desconto="<%= descontoCodigo %>" data-frete="<%= valorFrete %>" class="text-xl text-green-950">
                                                                 R$ <%= total.toLocaleString('pt-BR', {
                                                                     minimumFractionDigits: 2, maximumFractionDigits: 2
                                                                     }) %>
@@ -330,6 +331,19 @@
     <script src="/pages/js/carrinho-offline.js" defer></script>
     <script>
         const finalizarPedidoForm = document.getElementById("finalizarPedidoForm");
+        const metragem = document.getElementById("metragem");
+        const totalEstimado = document.getElementById("totalEstimado");
+        const atualizarTotalEstimado = () => {
+            if (!metragem || !totalEstimado) return;
+            const metragemInformada = metragem.value.trim() ? Number(metragem.value) : 1;
+            if (!Number.isFinite(metragemInformada) || metragemInformada <= 0) return;
+            const subtotal = Number(totalEstimado.dataset.subtotal) * metragemInformada;
+            const desconto = Number(totalEstimado.dataset.desconto) * metragemInformada;
+            const frete = Number(totalEstimado.dataset.frete);
+            totalEstimado.textContent = `R$ ${Math.max(0, subtotal - desconto + frete).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
+        metragem?.addEventListener("input", atualizarTotalEstimado);
+        atualizarTotalEstimado();
         finalizarPedidoForm?.addEventListener("submit", (event) => {
             if (finalizarPedidoForm.dataset.enviando === "true") {
                 event.preventDefault();

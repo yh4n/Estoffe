@@ -42,25 +42,30 @@
     <main class="py-20 px-6 md:px-16 lg:px-24 flex-grow">
       <div>
         <h2 class="text-3xl font-bold text-center mb-12">Faça seu Orçamento</h2>
+        <% if (sucesso) { %>
+          <p role="status" class="max-w-3xl mx-auto mb-6 rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-900">
+            Mensagem enviada. Nossa equipe entrará em contato em breve.
+          </p>
+        <% } %>
         <div class="max-w-3xl mx-auto bg-green-100/10 p-8 rounded-lg shadow-lg">
           <form action="/contato/enviar" method="POST" class="space-y-4">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700">Nome</label>
-              <input type="text" name="nome" required
+              <label for="contato-nome" class="block text-sm font-semibold text-gray-700">Nome</label>
+              <input id="contato-nome" type="text" name="nome" required
                 class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700">
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700">E-mail</label>
-              <input type="email" name="email" required
+              <label for="contato-email" class="block text-sm font-semibold text-gray-700">E-mail</label>
+              <input id="contato-email" type="email" name="email" required
                 class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700">
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-gray-700">Mensagem</label>
-              <textarea name="mensagem" required rows="4"
+              <label for="contato-mensagem" class="block text-sm font-semibold text-gray-700">Mensagem</label>
+              <textarea id="contato-mensagem" name="mensagem" required rows="4"
                 class="w-full border border-gray-300 p-3 rounded-md focus:outline-green-700"></textarea>
             </div>
 

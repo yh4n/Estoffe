@@ -149,7 +149,7 @@
 
                     <i class="bi bi-person"></i>
 
-                    <input type="text" id="name" name="nome" placeholder="Digite seu nome" autocomplete="name" required>
+                    <input type="text" id="name" name="nome" value="<%= dadosFormulario?.nome || '' %>" placeholder="Digite seu nome" autocomplete="name" required>
 
                   </div>
 
@@ -168,7 +168,7 @@
 
                     <i class="bi bi-envelope"></i>
 
-                    <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email"
+                    <input type="email" id="email" name="email" value="<%= dadosFormulario?.email || '' %>" placeholder="seu@email.com" autocomplete="email"
                       required>
 
                   </div>
@@ -188,7 +188,7 @@
 
                     <i class="bi bi-whatsapp"></i>
 
-                    <input type="text" id="telefone" name="telefone" placeholder="(48) 99999-9999" maxlength="15"
+                    <input type="text" id="telefone" name="telefone" value="<%= dadosFormulario?.telefone || '' %>" placeholder="(48) 99999-9999" maxlength="15"
                       required>
 
                   </div>
@@ -208,7 +208,7 @@
 
                     <i class="bi bi-card-text"></i>
 
-                    <input type="text" id="cpfCnpj" name="cpfCnpj" placeholder="999.999.999-99" maxlength="18" required>
+                    <input type="text" id="cpfCnpj" name="cpfCnpj" value="<%= dadosFormulario?.cpfCnpj || '' %>" placeholder="999.999.999-99" maxlength="18" required>
 
                   </div>
 
@@ -331,7 +331,7 @@
 
                     <i class="bi bi-mailbox"></i>
 
-                    <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" required>
+                    <input type="text" id="cep" name="cep" value="<%= dadosFormulario?.cep || '' %>" placeholder="00000-000" maxlength="9" required>
 
                   </div>
 
@@ -350,7 +350,7 @@
 
                     <i class="bi bi-hash"></i>
 
-                    <input type="text" id="numero" name="numero" placeholder="123" required>
+                    <input type="text" id="numero" name="numero" value="<%= dadosFormulario?.numero || '' %>" placeholder="123" required>
 
                   </div>
 
@@ -369,7 +369,7 @@
 
                 <div class="input-wrapper">
 
-                  <input type="text" id="rua" name="rua" placeholder="Rua Exemplo" required>
+                  <input type="text" id="rua" name="rua" value="<%= dadosFormulario?.rua || '' %>" placeholder="Rua Exemplo" required>
 
                 </div>
 
@@ -389,7 +389,7 @@
 
                   <div class="input-wrapper">
 
-                    <input type="text" id="bairro" name="bairro" placeholder="Centro" required>
+                    <input type="text" id="bairro" name="bairro" value="<%= dadosFormulario?.bairro || '' %>" placeholder="Centro" required>
 
                   </div>
 
@@ -404,7 +404,7 @@
 
                   <div class="input-wrapper">
 
-                    <input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, etc.">
+                    <input type="text" id="complemento" name="complemento" value="<%= dadosFormulario?.complemento || '' %>" placeholder="Apto, bloco, etc.">
 
                   </div>
 
@@ -426,7 +426,7 @@
 
                   <div class="input-wrapper">
 
-                    <input type="text" id="cidade" name="cidade" placeholder="São Paulo" required>
+                    <input type="text" id="cidade" name="cidade" value="<%= dadosFormulario?.cidade || '' %>" placeholder="São Paulo" required>
 
                   </div>
 
@@ -441,7 +441,7 @@
 
                   <div class="input-wrapper">
 
-                    <input type="text" id="uf" name="uf" placeholder="SP" maxlength="2" required>
+                    <input type="text" id="uf" name="uf" value="<%= dadosFormulario?.uf || '' %>" placeholder="SP" maxlength="2" required>
 
                   </div>
 

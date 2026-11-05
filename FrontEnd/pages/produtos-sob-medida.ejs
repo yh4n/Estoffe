@@ -70,7 +70,7 @@
                             </div>
 
                             <div class="p-6 pt-0" data-purchase-container>
-                                <form action="/carrinho/add/<%= produto.codProduto %>" method="POST" data-offline-cart-form data-authenticated="<%= usuario && usuario.tipo === 'cliente' ? 'true' : 'false' %>" data-product-id="<%= produto.codProduto %>">
+                                <form action="/carrinho/add/<%= produto.codProduto %>" method="POST" data-offline-cart-form data-authenticated="<%= usuario ? 'true' : 'false' %>" data-product-id="<%= produto.codProduto %>">
                                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                     <button type="submit" class="w-full text-center flex items-center justify-center gap-2 bg-green-950 hover:bg-green-800 text-white font-semibold px-4 py-3 rounded-sm transition-colors duration-300 uppercase tracking-wider text-xs cursor-pointer">
                                         <i class="bi bi-bag-plus"></i> Comprar

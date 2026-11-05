@@ -58,7 +58,20 @@
     window.setTimeout(() => restaurarFeedback(feedback), 1500);
   }
 
-  document.querySelectorAll("[data-offline-cart-form]").forEach((form) => {
+  const formulariosCarrinho = [...document.querySelectorAll("[data-offline-cart-form]")];
+  const temVisitante = formulariosCarrinho.some(
+    (form) => form.dataset.authenticated !== "true",
+  );
+  if (temVisitante) {
+    atualizarIndicadorCarrinho(
+      lerCarrinho().reduce((total, item) => {
+        const quantidade = Number(item.quantidade);
+        return total + (Number.isSafeInteger(quantidade) && quantidade > 0 ? quantidade : 0);
+      }, 0),
+    );
+  }
+
+  formulariosCarrinho.forEach((form) => {
     const autenticado = form.dataset.authenticated === "true";
 
     form.addEventListener("submit", (event) => {
