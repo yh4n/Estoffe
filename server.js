@@ -5,7 +5,6 @@ const session = require("express-session");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
 const csrf = require("csurf");
-const multer = require("multer");
 
 // Importações de config
 const db = require(
@@ -48,9 +47,9 @@ app.use(cookieParser());
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "EstoffeMoveisPlanejados2026",
+    secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
@@ -62,54 +61,18 @@ app.use(
 // Passport precisa ser inicializado APÓS a sessão
 app.use(passport.initialize());
 
-const uploadImagemProduto = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 13 },
-}).fields([
-  { name: "imagem", maxCount: 1 },
-  { name: "fotosGaleria", maxCount: 12 },
-]);
-const uploadFotoAcompanhamento = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
-}).single("foto");
-
-app.use((req, res, next) => {
-  const rotaFotoAcompanhamento =
-    req.method === "POST" &&
-    /^\/estofador\/pedido\/\d+\/fotos$/.test(req.path);
-  if (rotaFotoAcompanhamento && req.is("multipart/form-data")) {
-    return uploadFotoAcompanhamento(req, res, (error) => {
-      if (error) {
-        return res
-          .status(400)
-          .send("Envie uma foto JPEG, PNG ou WebP de até 5 MB.");
-      }
-      next();
-    });
-  }
-
-  const rotaProduto =
-    req.method === "POST" &&
-    (req.path === "/admin/produtos/salvar" ||
-      /^\/admin\/produtos\/\d+\/editar$/.test(req.path));
-  if (!rotaProduto || !req.is("multipart/form-data")) return next();
-
-  uploadImagemProduto(req, res, (error) => {
-    if (error)
-      return res
-        .status(400)
-        .send(
-          "Envie até 12 fotos para a galeria; cada arquivo deve ter até 5 MB.",
-        );
-    next();
-  });
-});
-
 // CSRF Protection (Configurado após express-session e cookie-parser)
 const csrfProtection = csrf({ cookie: true });
 app.use((req, res, next) => {
-  if (req.path === "/webhooks/asaas") return next();
+  const uploadMultipartAutenticado =
+    req.method === "POST" &&
+    req.is("multipart/form-data") &&
+    (req.path === "/admin/produtos/salvar" ||
+      /^\/admin\/produtos\/\d+\/editar$/.test(req.path) ||
+      /^\/estofador\/pedido\/\d+\/fotos$/.test(req.path));
+  if (req.path === "/webhooks/asaas" || uploadMultipartAutenticado) {
+    return next();
+  }
   csrfProtection(req, res, (error) => {
     if (!error) return next();
     return next(error);
@@ -118,7 +81,7 @@ app.use((req, res, next) => {
 
 // Disponibiliza o token CSRF pra todas as views
 app.use((req, res, next) => {
-  if (req.path !== "/webhooks/asaas") {
+  if (typeof req.csrfToken === "function") {
     res.locals.csrfToken = req.csrfToken();
   }
   res.locals.currentPath = req.path;

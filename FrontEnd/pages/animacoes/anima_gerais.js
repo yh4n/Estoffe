@@ -1,17 +1,3 @@
-// --- ANIMAÇÃO PARA O DESKTOP DA NAVBAR ---
-window.addEventListener('scroll', function () {
-    const header = document.getElementById('main-header');
-    if (!header) return;
-
-    if (window.scrollY > 50) {
-        header.classList.remove('bg-green-950');
-        header.classList.add('bg-green-950/95', 'backdrop-blur-md', 'shadow-xl');
-    } else {
-        header.classList.remove('bg-green-950/95', 'backdrop-blur-md', 'shadow-xl');
-        header.classList.add('bg-green-950');
-    }
-});
-
 let estiloTransicaoEstoffe;
 
 function iniciarTransicaoEstoffe(alvo) {

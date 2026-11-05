@@ -12,7 +12,8 @@ if (!SECRET_KEY) {
 function verificarAutenticacao(tiposPermitidos) {
   return (req, res, next) => {
     const usuario = req.session.usuario;
-    const respostaJson = req.accepts("json");
+    const respostaJson =
+      req.xhr || req.accepts(["html", "json"]) === "json";
 
     if (!usuario || !usuario.token) {
       if (respostaJson) {
@@ -46,7 +47,7 @@ const apenasAdmin = (req, res, next) => {
   if (req.session.usuario && req.session.usuario.tipo === "admin") {
     return next();
   }
-  if (req.accepts("json")) {
+  if (req.xhr || req.accepts(["html", "json"]) === "json") {
     return res.status(403).json({ error: "Acesso permitido somente para administradores." });
   }
   return res.redirect("/client-dashboard");

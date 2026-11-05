@@ -287,7 +287,7 @@ router.post(
 
       await atualizarCartCount(req, codCliente);
 
-      if (req.accepts("json")) {
+      if (req.xhr || req.accepts(["html", "json"]) === "json") {
         return res.json({
           sucesso: true,
           cartCount: req.session.cartCount,

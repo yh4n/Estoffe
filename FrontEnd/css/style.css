@@ -195,6 +195,20 @@ footer p {
   backdrop-filter: blur(16px);
 }
 
+#main-header.is-scrolled {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  background: rgba(8, 33, 23, 0.78);
+  border-bottom-color: rgba(226, 190, 113, 0.22);
+  box-shadow: 0 8px 26px rgba(4, 20, 13, 0.16);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+}
+
+#main-header.is-scrolled #logo-img {
+  height: 2.5rem;
+}
+
 #header-logo img {
   filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.2));
 }

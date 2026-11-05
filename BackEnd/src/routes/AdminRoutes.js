@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const axios = require("axios");
+const multer = require("multer");
+const csrf = require("csurf");
 const fs = require("fs/promises");
 const path = require("path");
 const { randomUUID } = require("crypto");
@@ -19,6 +21,31 @@ const {
   verificarAutenticacao,
   apenasAdmin,
 } = require("../config/middleware/auth");
+
+const csrfProtection = csrf({ cookie: true });
+const tratarErroUpload = (upload, mensagem) => (req, res, next) => {
+  upload(req, res, (error) => {
+    if (error) return res.status(400).send(mensagem);
+    next();
+  });
+};
+const uploadImagemProduto = tratarErroUpload(
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024, files: 13 },
+  }).fields([
+    { name: "imagem", maxCount: 1 },
+    { name: "fotosGaleria", maxCount: 12 },
+  ]),
+  "Envie até 12 fotos para a galeria; cada arquivo deve ter até 5 MB.",
+);
+const uploadFotoAcompanhamento = tratarErroUpload(
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  }).single("foto"),
+  "Envie uma foto JPEG, PNG ou WebP de até 5 MB.",
+);
 
 async function salvarImagemProduto(arquivo) {
   const buffer = arquivo.buffer;
@@ -926,6 +953,8 @@ router.post(
   "/admin/produtos/salvar",
   verificarAutenticacao(["admin"]),
   apenasAdmin,
+  uploadImagemProduto,
+  csrfProtection,
   async (req, res) => {
     const {
       nome,
@@ -1135,6 +1164,8 @@ router.post(
   "/admin/produtos/:id/editar",
   verificarAutenticacao(["admin"]),
   apenasAdmin,
+  uploadImagemProduto,
+  csrfProtection,
   async (req, res) => {
     const idProduto = Number(req.params.id);
     const {
@@ -2087,6 +2118,8 @@ router.get(
 router.post(
   "/estofador/pedido/:id/fotos",
   verificarAutenticacao(["estofador"]),
+  uploadFotoAcompanhamento,
+  csrfProtection,
   async (req, res) => {
     const codPedido = Number(req.params.id);
     const legenda = String(req.body.legenda || "").trim();
@@ -2590,13 +2623,16 @@ router.post(
   async (req, res) => {
     const nome = String(req.body.nome || "").trim();
     const email = String(req.body.email || "").trim();
+    const senha = String(req.body.senha || "");
 
-    if (!nome || !email) {
-      return res.status(400).send("Informe o nome e o e-mail do estofador.");
+    if (!nome || !email || senha.length < 12) {
+      return res
+        .status(400)
+        .send("Informe nome, e-mail e uma senha com pelo menos 12 caracteres.");
     }
 
     try {
-      const senhaCriptografada = await bcrypt.hash("123456", 10);
+      const senhaCriptografada = await bcrypt.hash(senha, 10);
       await db.query(
         "INSERT INTO usuario (nome, email, senha, tipo) VALUES (?, ?, ?, 'estofador')",
         [nome, email, senhaCriptografada],

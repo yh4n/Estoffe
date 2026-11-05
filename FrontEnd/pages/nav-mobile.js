@@ -1,6 +1,14 @@
 const menuBtn = document.getElementById('menu-btn');
 const menu = document.getElementById('menu');
 const mobileViewport = window.matchMedia('(max-width: 767px)');
+const header = document.getElementById('main-header');
+
+const atualizarHeader = () => {
+    header?.classList.toggle('is-scrolled', window.scrollY > 50);
+};
+
+window.addEventListener('scroll', atualizarHeader, { passive: true });
+atualizarHeader();
 
 if (menuBtn && menu) {
     let menuAberto = false;

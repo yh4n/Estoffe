@@ -284,11 +284,37 @@ const limitadorLogin = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+const limitadorFormularioPublico = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Muitas solicitações. Tente novamente em alguns minutos.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const escaparHtml = (valor) => String(valor).replace(/[&<>"']/g, (caractere) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+})[caractere]);
+const regenerarSessao = (req) =>
+  new Promise((resolve, reject) => {
+    req.session.regenerate((error) => {
+      if (error) return reject(error);
+      resolve();
+    });
+  });
 
-router.post("/contato/enviar", async (req, res) => {
-  const { nome, email, mensagem } = req.body;
+router.post("/contato/enviar", limitadorFormularioPublico, async (req, res) => {
+  const nome = String(req.body.nome || "").trim();
+  const email = String(req.body.email || "").trim();
+  const mensagem = String(req.body.mensagem || "").trim();
   if (!nome || !email || !mensagem) {
     return res.status(400).send("Todos os campos são obrigatórios.");
+  }
+  if (nome.length > 100 || email.length > 150 || mensagem.length > 5000) {
+    return res.status(400).send("Os campos excedem o tamanho permitido.");
   }
   try {
     const queryInsert =
@@ -300,7 +326,7 @@ router.post("/contato/enviar", async (req, res) => {
       replyTo: email,
       to: process.env.EMAIL_ADMIN || "estoffeestofados@gmail.com",
       subject: `Nova Mensagem de Contato - Estoffe (${nome})`,
-      html: `<h2>Nova mensagem recebida!</h2><p><strong>Nome:</strong> ${nome}</p><p>${mensagem}</p>`,
+      html: `<h2>Nova mensagem recebida!</h2><p><strong>Nome:</strong> ${escaparHtml(nome)}</p><p>${escaparHtml(mensagem).replace(/\n/g, "<br>")}</p>`,
     };
     await transportador.sendMail(opcoesEmail);
 
@@ -311,7 +337,7 @@ router.post("/contato/enviar", async (req, res) => {
   }
 });
 
-router.post("/orcamento-sob-medida/enviar", async (req, res) => {
+router.post("/orcamento-sob-medida/enviar", limitadorFormularioPublico, async (req, res) => {
   const nome = String(req.body.nome || "").trim();
   const email = String(req.body.email || "").trim();
   const telefone = String(req.body.telefone || "").trim();
@@ -338,14 +364,6 @@ router.post("/orcamento-sob-medida/enviar", async (req, res) => {
     "",
     mensagem,
   ].join("\n");
-  const escaparHtml = (valor) => valor.replace(/[&<>"']/g, (caractere) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[caractere]);
-
   try {
     await db.query(
       "INSERT INTO contato_mensagem (nome, email, mensagem) VALUES (?, ?, ?)",
@@ -396,6 +414,8 @@ router.post("/login", limitadorLogin, async (req, res) => {
       if (!senhaValida) {
         return renderLoginError("Email ou senha incorretos.");
       }
+
+      await regenerarSessao(req);
 
       let carrinhoOfflineMesclado = false;
       if (usuarioEncontrado.tipo === "cliente") {
@@ -541,7 +561,7 @@ router.get("/register", (req, res) => {
   });
 });
 
-router.post("/register", async (req, res) => {
+router.post("/register", limitadorFormularioPublico, async (req, res) => {
   console.log(">>> Requisição POST /register recebida com sucesso!");
   const {
     nome,
@@ -649,9 +669,8 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/atualizar-usuario", async (req, res) => {
+router.post("/atualizar-usuario", verificarAutenticacao(["cliente"]), async (req, res) => {
   const {
-    codUsuario,
     nome,
     email,
     novaSenha,
@@ -665,6 +684,7 @@ router.post("/atualizar-usuario", async (req, res) => {
     cpfCnpj,
     telefone,
   } = req.body;
+  const codUsuario = req.session.usuario.codUsuario;
 
   const connection = await db.getConnection();
 
@@ -701,7 +721,7 @@ router.post("/atualizar-usuario", async (req, res) => {
     await connection.commit();
     connection.release();
 
-    return res.redirect("/login");
+    return res.redirect("/perfil");
   } catch (error) {
     await connection.rollback();
     connection.release();
@@ -730,7 +750,7 @@ router.get("/forgot-password", (req, res) => {
   res.render("forgot-password", { error: null, success: null });
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", limitadorFormularioPublico, async (req, res) => {
   const { email } = req.body;
   try {
     const [usuarios] = await db.query(
@@ -858,6 +878,13 @@ router.get(["/reset-password", "/redefinir-senha/:token"], async (req, res) => {
 
 router.post("/reset-password", async (req, res) => {
   const { token, novaSenha, confirmarSenha } = req.body;
+
+  if (typeof novaSenha !== "string" || novaSenha.length < 8) {
+    return res.render("reset-password", {
+      error: "A senha deve ter no mínimo 8 caracteres.",
+      token: token,
+    });
+  }
 
   if (novaSenha !== confirmarSenha) {
     return res.render("reset-password", {
