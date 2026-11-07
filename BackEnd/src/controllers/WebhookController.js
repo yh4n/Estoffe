@@ -96,8 +96,13 @@ router.post("/webhooks/asaas", async (req, res) => {
         .json({ erro: "Pagamento não corresponde ao pedido." });
     }
     const valorRecebido = Number(payment?.value);
+    if (!Number.isFinite(valorRecebido) || valorRecebido <= 0) {
+      await connection.rollback();
+      return res.status(409).json({
+        erro: "Valor recebido indisponível ou inválido para este pagamento.",
+      });
+    }
     if (
-      Number.isFinite(valorRecebido) &&
       Math.round(valorRecebido * 100) !==
         Math.round(Number(pedido.valorTotal) * 100)
     ) {

@@ -24,6 +24,18 @@ function verificarAutenticacao(tiposPermitidos) {
 
     try {
       const decodificado = jwt.verify(usuario.token, SECRET_KEY);
+      const expiraEm = Number(decodificado.exp || 0) * 1000 - Date.now();
+
+      if (expiraEm <= 5 * 60 * 1000 && decodificado.codUsuario && decodificado.tipo) {
+        req.session.usuario.token = jwt.sign(
+          {
+            codUsuario: decodificado.codUsuario,
+            tipo: decodificado.tipo,
+          },
+          SECRET_KEY,
+          { expiresIn: "1h" },
+        );
+      }
 
       if (tiposPermitidos.includes(decodificado.tipo)) {
         return next();

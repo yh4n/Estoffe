@@ -119,7 +119,7 @@ Configure `EMAIL_USER` e `EMAIL_PASS` para e-mails de pedidos, orcamentos e agen
 
 ### Pagamentos
 
-Para pagamentos reais, configure `ASAAS_API_URL=https://api.asaas.com/v3`, `ASAAS_TOKEN` e os dados de webhook (`ASAAS_WEBHOOK_TOKEN`) conforme a integracao Asaas. Em desenvolvimento, a URL padrao e o sandbox (`https://api-sandbox.asaas.com/v3`). Para testes locais sem cobranca, defina `SIMULAR_PAGAMENTO=true`; isso aprova o pagamento localmente e atualiza o estoque sem chamar o Asaas. A simulacao e ignorada automaticamente quando `NODE_ENV=production`.
+Para pagamentos reais, configure `ASAAS_API_URL=https://api.asaas.com/v3`, `ASAAS_TOKEN` e os dados de webhook (`ASAAS_WEBHOOK_TOKEN`) conforme a integracao Asaas. Em desenvolvimento, a URL padrao e o sandbox (`https://api-sandbox.asaas.com/v3`). Para testes locais sem cobranca, defina `NODE_ENV=development` e `SIMULAR_PAGAMENTO=true`; isso aprova o pagamento localmente e atualiza o estoque sem chamar o Asaas. A simulacao e desativada em `production` e tambem quando `NODE_ENV` nao estiver explicitamente definido como `development` ou `test`.
 
 ### Login Google
 

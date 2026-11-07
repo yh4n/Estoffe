@@ -50,9 +50,60 @@
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="p-6 overflow-x-auto">
+        <% if (pedidosProducao && pedidosProducao.length > 0) { %>
+          <section class="mb-5 rounded-lg border border-gray-200 bg-gray-50 p-4" aria-label="Ações em lote">
+            <div class="flex flex-wrap items-end gap-3">
+              <label class="inline-flex items-center gap-2 pb-2 text-sm font-medium text-gray-700">
+                <input type="checkbox" id="selecionarTodosProducao" class="h-4 w-4 accent-green-800">
+                Selecionar todos
+              </label>
+              <label class="text-xs font-semibold text-gray-600">
+                Alterar status
+                <select id="statusProducaoEmLote" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-2 text-sm">
+                  <option value="">Escolha um status</option>
+                  <option value="Aberto">Aberto</option>
+                  <option value="Pago">Pago</option>
+                  <option value="Em Produção">Em Produção</option>
+                  <option value="Pronto">Pronto</option>
+                  <option value="Entregue">Entregue</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </label>
+              <label class="text-xs font-semibold text-gray-600">
+                Estofador (obrigatório para Em Produção)
+                <select id="estofadorProducaoEmLote" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-2 text-sm">
+                  <option value="">Selecione</option>
+                  <% estofadores.forEach(function(estofador) { %>
+                    <option value="<%= estofador.codUsuario %>"><%= estofador.nome %></option>
+                  <% }); %>
+                </select>
+              </label>
+              <button type="button" id="aplicarStatusProducaoEmLote" disabled
+                class="rounded-md bg-green-900 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50">
+                Aplicar status
+              </button>
+              <label class="text-xs font-semibold text-gray-600">
+                Atribuir estofador
+                <select id="estofadorAtribuicaoEmLote" class="mt-1 block rounded-md border border-gray-300 bg-white px-2 py-2 text-sm">
+                  <option value="">Selecione</option>
+                  <% estofadores.forEach(function(estofador) { %>
+                    <option value="<%= estofador.codUsuario %>"><%= estofador.nome %></option>
+                  <% }); %>
+                </select>
+              </label>
+              <button type="button" id="atribuirEstofadorEmLote" disabled
+                class="rounded-md border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50">
+                Atribuir selecionados
+              </button>
+            </div>
+            <p id="resumoSelecaoProducao" class="mt-3 text-xs text-gray-600" aria-live="polite"></p>
+            <div id="resultadoSelecaoProducao" class="mt-2 text-sm" role="status" aria-live="polite"></div>
+          </section>
+        <% } %>
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">
+              <th class="pb-3"><span class="sr-only">Selecionar</span></th>
               <th class="pb-3">Nº Pedido</th>
               <th class="pb-3">Cliente</th>
               <th class="pb-3">Data de Entrada</th>
@@ -65,6 +116,10 @@
             <% if (pedidosProducao && pedidosProducao.length> 0) { %>
               <% pedidosProducao.forEach(function(item) { %>
                 <tr class="hover:bg-gray-50/50 transition-colors">
+                  <td class="py-4 pr-3">
+                    <input type="checkbox" class="producao-checkbox h-4 w-4 accent-green-800"
+                      value="<%= item.codPedido %>" aria-label="Selecionar pedido <%= item.codPedido %>">
+                  </td>
                   <td class="py-4 pr-4 font-bold text-green-900">
                     #<%= item.codPedido %>
                     <a href="/admin/estofador-analisa/<%= item.codPedido %>"
@@ -159,7 +214,7 @@
                 <% }); %>
                   <% } else { %>
                     <tr>
-                      <td colspan="6" class="py-8 text-center text-gray-400">Nenhum serviço em produção neste momento.
+                      <td colspan="7" class="py-8 text-center text-gray-400">Nenhum pedido em produção neste momento.
                       </td>
                     </tr>
                     <% } %>
@@ -168,6 +223,111 @@
       </div>
     </div>
   </main>
+  <script>
+    const producaoCheckboxes = [...document.querySelectorAll(".producao-checkbox")];
+    const selecionarTodosProducao = document.getElementById("selecionarTodosProducao");
+    const statusProducaoEmLote = document.getElementById("statusProducaoEmLote");
+    const estofadorProducaoEmLote = document.getElementById("estofadorProducaoEmLote");
+    const estofadorAtribuicaoEmLote = document.getElementById("estofadorAtribuicaoEmLote");
+    const aplicarStatusProducaoEmLote = document.getElementById("aplicarStatusProducaoEmLote");
+    const atribuirEstofadorEmLote = document.getElementById("atribuirEstofadorEmLote");
+    const resumoSelecaoProducao = document.getElementById("resumoSelecaoProducao");
+    const resultadoSelecaoProducao = document.getElementById("resultadoSelecaoProducao");
+    const csrfProducao = document.querySelector('input[name="_csrf"]')?.value || "";
+    let processandoProducaoEmLote = false;
+    const pedidosProducaoSelecionados = () =>
+      producaoCheckboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+    const atualizarSelecaoProducao = () => {
+      const selecionados = pedidosProducaoSelecionados();
+      if (selecionarTodosProducao) {
+        selecionarTodosProducao.checked = producaoCheckboxes.length > 0 &&
+          selecionados.length === producaoCheckboxes.length;
+        selecionarTodosProducao.indeterminate = selecionados.length > 0 &&
+          selecionados.length < producaoCheckboxes.length;
+      }
+      if (aplicarStatusProducaoEmLote) aplicarStatusProducaoEmLote.disabled = !selecionados.length || processandoProducaoEmLote;
+      if (atribuirEstofadorEmLote) atribuirEstofadorEmLote.disabled = !selecionados.length || processandoProducaoEmLote;
+      producaoCheckboxes.forEach((checkbox) => {
+        checkbox.disabled = processandoProducaoEmLote;
+      });
+      if (selecionarTodosProducao) selecionarTodosProducao.disabled = processandoProducaoEmLote;
+      if (resumoSelecaoProducao) {
+        resumoSelecaoProducao.textContent = selecionados.length
+          ? `${selecionados.length} pedido(s) selecionado(s). As regras e validações atuais serão aplicadas a cada pedido.`
+          : "Selecione os pedidos para aplicar uma ação em lote.";
+      }
+    };
+    const enviarAcaoProducaoEmLote = async (pedidos, rota, campos) => {
+      processandoProducaoEmLote = true;
+      atualizarSelecaoProducao();
+      resultadoSelecaoProducao.textContent = "Processando pedidos selecionados...";
+      const falhas = [];
+      const notificacoesComErro = [];
+      for (const id of pedidos) {
+        const dados = new URLSearchParams({ ...campos, _csrf: csrfProducao });
+        try {
+          const resposta = await fetch(`/admin/pedido/${encodeURIComponent(id)}/${rota}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: dados.toString(),
+            credentials: "same-origin"
+          });
+          if (!resposta.ok) falhas.push(`#${id}: ${await resposta.text()}`);
+          else if (resposta.url.includes("notificacao=erro")) notificacoesComErro.push(`#${id}`);
+        } catch (error) {
+          console.error(`Erro ao atualizar o pedido #${id} em lote:`, error);
+          falhas.push(`#${id}: não foi possível concluir a solicitação.`);
+        }
+      }
+      if (falhas.length) {
+        resultadoSelecaoProducao.textContent =
+          `${pedidos.length - falhas.length} concluído(s); ${falhas.length} falha(s): ${falhas.join(" ")}` +
+          (notificacoesComErro.length ? ` Aviso ao cliente não enviado para: ${notificacoesComErro.join(", ")}.` : "");
+        processandoProducaoEmLote = false;
+        atualizarSelecaoProducao();
+        return;
+      }
+      if (notificacoesComErro.length) {
+        window.location.href = `/admin/producao?notificacao=erro`;
+        return;
+      }
+      resultadoSelecaoProducao.textContent = "Ação concluída para todos os pedidos selecionados.";
+      window.location.reload();
+    };
+    producaoCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", atualizarSelecaoProducao));
+    selecionarTodosProducao?.addEventListener("change", () => {
+      producaoCheckboxes.forEach((checkbox) => {
+        checkbox.checked = selecionarTodosProducao.checked;
+      });
+      atualizarSelecaoProducao();
+    });
+    aplicarStatusProducaoEmLote?.addEventListener("click", () => {
+      const pedidos = pedidosProducaoSelecionados();
+      const novoStatus = statusProducaoEmLote.value;
+      if (!pedidos.length || !novoStatus) {
+        resultadoSelecaoProducao.textContent = "Selecione pedidos e um status.";
+        return;
+      }
+      const codEstofador = estofadorProducaoEmLote.value;
+      if (novoStatus === "Em Produção" && !codEstofador) {
+        resultadoSelecaoProducao.textContent = "Selecione um estofador para iniciar a produção.";
+        return;
+      }
+      if (!window.confirm(`Aplicar o status "${novoStatus}" a ${pedidos.length} pedido(s)?`)) return;
+      enviarAcaoProducaoEmLote(pedidos, "status", { novoStatus, codEstofador });
+    });
+    atribuirEstofadorEmLote?.addEventListener("click", () => {
+      const pedidos = pedidosProducaoSelecionados();
+      const codEstofador = estofadorAtribuicaoEmLote.value;
+      if (!pedidos.length || !codEstofador) {
+        resultadoSelecaoProducao.textContent = "Selecione pedidos e um estofador.";
+        return;
+      }
+      if (!window.confirm(`Atribuir o mesmo estofador a ${pedidos.length} pedido(s)?`)) return;
+      enviarAcaoProducaoEmLote(pedidos, "estofador", { codEstofador });
+    });
+    atualizarSelecaoProducao();
+  </script>
 </body>
 
 </html>

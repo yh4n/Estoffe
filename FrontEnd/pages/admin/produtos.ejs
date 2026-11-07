@@ -66,7 +66,7 @@
                 <h2 class="text-lg font-bold text-green-950">Promoção em produtos selecionados</h2>
                 <p class="mt-1 text-sm text-gray-500">Selecione os produtos, informe o desconto e aplique a mesma promoção a todos.</p>
             </div>
-            <form action="/admin/produtos/promocao" method="POST" class="space-y-4">
+            <form action="/admin/produtos/promocao" method="POST" id="promocaoProdutosForm" class="space-y-4">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <label class="block text-sm font-semibold text-gray-700">
@@ -77,20 +77,28 @@
                             <span class="text-gray-500">%</span>
                         </div>
                     </label>
-                    <button name="acao" value="ativar" type="submit" class="rounded bg-green-800 px-4 py-2 font-medium text-white hover:bg-green-700">
+                    <button name="acao" value="ativar" type="submit" disabled class="acao-promocao-produtos rounded bg-green-800 px-4 py-2 font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">
                         <i class="bi bi-tag" aria-hidden="true"></i> Aplicar promoção
                     </button>
-                    <button name="acao" value="remover" type="submit" class="rounded bg-gray-700 px-4 py-2 font-medium text-white hover:bg-gray-600">
+                    <button name="acao" value="remover" type="submit" disabled class="acao-promocao-produtos rounded bg-gray-700 px-4 py-2 font-medium text-white hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50">
                         <i class="bi bi-tag-fill" aria-hidden="true"></i> Remover promoção
                     </button>
                 </div>
+                <p id="resumoSelecaoProdutos" class="text-xs text-gray-500" aria-live="polite">
+                    Selecione os produtos que deseja atualizar.
+                </p>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <caption class="sr-only">Produtos disponíveis para promoção</caption>
                         <thead>
                             <tr class="border-b text-gray-500">
-                                <th scope="col" class="p-2"><span class="sr-only">Selecionar</span></th>
+                                <th scope="col" class="p-2">
+                                    <label class="inline-flex items-center gap-2 whitespace-nowrap text-xs font-medium text-gray-600">
+                                        <input type="checkbox" id="selecionarTodosProdutos" aria-label="Selecionar todos os produtos" class="h-4 w-4 accent-green-800">
+                                        Todos
+                                    </label>
+                                </th>
                                 <th scope="col" class="p-2">Produto</th>
                                 <th scope="col" class="p-2">Categoria</th>
                                 <th scope="col" class="p-2">Preço atual</th>
@@ -102,7 +110,7 @@
                             <% produtos.forEach((produto) => { %>
                                 <tr class="border-b last:border-0 hover:bg-gray-50">
                                     <td class="p-2">
-                                        <input type="checkbox" name="produtoIds" value="<%= produto.codProduto %>" aria-label="Selecionar <%= produto.nome %>" class="h-4 w-4 accent-green-800">
+                                        <input type="checkbox" name="produtoIds" value="<%= produto.codProduto %>" aria-label="Selecionar <%= produto.nome %>" class="produto-promocao-checkbox h-4 w-4 accent-green-800">
                                     </td>
                                     <td class="p-2 font-semibold"><%= produto.nome %></td>
                                     <td class="p-2 text-gray-500"><%= produto.nome_categoria || 'Sem categoria' %></td>
@@ -137,6 +145,38 @@
             </form>
         </section>
     </main>
+    <script>
+        const produtosPromocaoCheckboxes = [...document.querySelectorAll(".produto-promocao-checkbox")];
+        const selecionarTodosProdutos = document.getElementById("selecionarTodosProdutos");
+        const resumoSelecaoProdutos = document.getElementById("resumoSelecaoProdutos");
+        const atualizarSelecaoProdutos = () => {
+            const selecionados = produtosPromocaoCheckboxes.filter((checkbox) => checkbox.checked);
+            if (selecionarTodosProdutos) {
+                selecionarTodosProdutos.checked = produtosPromocaoCheckboxes.length > 0 &&
+                    selecionados.length === produtosPromocaoCheckboxes.length;
+                selecionarTodosProdutos.indeterminate = selecionados.length > 0 &&
+                    selecionados.length < produtosPromocaoCheckboxes.length;
+            }
+            document.querySelectorAll(".acao-promocao-produtos").forEach((botao) => {
+                botao.disabled = selecionados.length === 0;
+            });
+            if (resumoSelecaoProdutos) {
+                resumoSelecaoProdutos.textContent = selecionados.length
+                    ? `${selecionados.length} de ${produtosPromocaoCheckboxes.length} produto(s) selecionado(s).`
+                    : "Selecione os produtos que deseja atualizar.";
+            }
+        };
+        produtosPromocaoCheckboxes.forEach((checkbox) =>
+            checkbox.addEventListener("change", atualizarSelecaoProdutos)
+        );
+        selecionarTodosProdutos?.addEventListener("change", () => {
+            produtosPromocaoCheckboxes.forEach((checkbox) => {
+                checkbox.checked = selecionarTodosProdutos.checked;
+            });
+            atualizarSelecaoProdutos();
+        });
+        atualizarSelecaoProdutos();
+    </script>
 </body>
 
 </html>

@@ -47,10 +47,26 @@
                     </p>
                 </div>
                 <% if (pedidosAPagar.length) { %>
+                    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <input type="checkbox" id="selecionarTodosPedidosPagamento" class="h-4 w-4 accent-green-800">
+                            Selecionar todos
+                        </label>
+                        <button type="button" id="pagarProximoSelecionado" disabled
+                            class="rounded-sm bg-green-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50">
+                            Pagar próximo selecionado
+                        </button>
+                    </div>
+                    <p id="selecaoPagamentoResumo" class="mb-3 text-xs text-gray-500" aria-live="polite"></p>
                     <div class="divide-y divide-gray-200 border-y border-gray-200">
                         <% pedidosAPagar.forEach((pedido)=> { %>
-                            <article class="py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <article class="py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-pedido-pagamento>
                                 <div>
+                                    <label class="mb-2 inline-flex items-center gap-2 text-sm text-gray-600">
+                                        <input type="checkbox" class="pedido-pagamento-checkbox h-4 w-4 accent-green-800"
+                                            value="<%= pedido.codPedido %>" aria-label="Selecionar pedido <%= pedido.codPedido %>">
+                                        Selecionar
+                                    </label>
                                     <h3 class="font-semibold text-gray-900">Pedido #<%= pedido.codPedido %>
                                     </h3>
                                     <p class="text-sm text-gray-600 mt-1">Frete: R$ <%= Number(pedido.valorFrete ||
@@ -330,6 +346,59 @@
 
     <script src="/pages/js/carrinho-offline.js" defer></script>
     <script>
+        const pedidoPagamentoCheckboxes = [...document.querySelectorAll(".pedido-pagamento-checkbox")];
+        const selecionarTodosPedidosPagamento = document.getElementById("selecionarTodosPedidosPagamento");
+        const pagarProximoSelecionado = document.getElementById("pagarProximoSelecionado");
+        const selecaoPagamentoResumo = document.getElementById("selecaoPagamentoResumo");
+        const chavePedidosPagamentoSelecionados = "estoffe-pedidos-pagamento-selecionados";
+        const atualizarSelecaoPagamento = () => {
+            const selecionados = pedidoPagamentoCheckboxes.filter((checkbox) => checkbox.checked);
+            if (selecionarTodosPedidosPagamento) {
+                selecionarTodosPedidosPagamento.checked = pedidoPagamentoCheckboxes.length > 0 &&
+                    selecionados.length === pedidoPagamentoCheckboxes.length;
+                selecionarTodosPedidosPagamento.indeterminate = selecionados.length > 0 &&
+                    selecionados.length < pedidoPagamentoCheckboxes.length;
+            }
+            if (pagarProximoSelecionado) pagarProximoSelecionado.disabled = selecionados.length === 0;
+            if (selecaoPagamentoResumo) {
+                selecaoPagamentoResumo.textContent = selecionados.length
+                    ? `${selecionados.length} pedido(s) selecionado(s). O pagamento será iniciado para um pedido por vez.`
+                    : "Selecione os pedidos que deseja pagar.";
+            }
+            if (pedidoPagamentoCheckboxes.length) {
+                try {
+                    sessionStorage.setItem(chavePedidosPagamentoSelecionados,
+                        JSON.stringify(selecionados.map((checkbox) => checkbox.value)));
+                } catch (error) {
+                    console.error("Não foi possível salvar a seleção de pedidos a pagar:", error);
+                }
+            }
+        };
+        try {
+            const pedidosSalvos = JSON.parse(sessionStorage.getItem(chavePedidosPagamentoSelecionados) || "[]");
+            pedidoPagamentoCheckboxes.forEach((checkbox) => {
+                checkbox.checked = pedidosSalvos.includes(checkbox.value);
+            });
+        } catch (error) {
+            console.error("Não foi possível restaurar a seleção de pedidos a pagar:", error);
+        }
+        pedidoPagamentoCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", atualizarSelecaoPagamento));
+        selecionarTodosPedidosPagamento?.addEventListener("change", () => {
+            pedidoPagamentoCheckboxes.forEach((checkbox) => {
+                checkbox.checked = selecionarTodosPedidosPagamento.checked;
+            });
+            atualizarSelecaoPagamento();
+        });
+        pagarProximoSelecionado?.addEventListener("click", () => {
+            const proximo = pedidoPagamentoCheckboxes.find((checkbox) => checkbox.checked);
+            if (!proximo) return;
+            const formulario = proximo.closest("[data-pedido-pagamento]")?.querySelector("form");
+            proximo.checked = false;
+            atualizarSelecaoPagamento();
+            formulario?.requestSubmit();
+        });
+        atualizarSelecaoPagamento();
+
         const finalizarPedidoForm = document.getElementById("finalizarPedidoForm");
         const metragem = document.getElementById("metragem");
         const totalEstimado = document.getElementById("totalEstimado");

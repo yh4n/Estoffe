@@ -35,8 +35,9 @@ function urlApiAsaas(caminho) {
 }
 
 function pagamentoTesteAtivo() {
+  const ambiente = String(process.env.NODE_ENV || "").toLowerCase();
   return (
-    process.env.NODE_ENV !== "production" &&
+    ["development", "test"].includes(ambiente) &&
     process.env.SIMULAR_PAGAMENTO === "true"
   );
 }

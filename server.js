@@ -21,6 +21,10 @@ if (!process.env.JWT_SECRET) {
   console.error("CRÍTICO: JWT_SECRET não definida no arquivo .env!");
   process.exit(1);
 }
+if (!process.env.SESSION_SECRET) {
+  console.error("CRÍTICO: SESSION_SECRET não definida no arquivo .env!");
+  process.exit(1);
+}
 
 module.exports = {
   jwtSecret: process.env.JWT_SECRET,
@@ -28,6 +32,15 @@ module.exports = {
 };
 // Inicializar app
 const app = express();
+const trustProxySetting = (() => {
+  const valorConfigurado = process.env.TRUST_PROXY;
+  if (valorConfigurado === undefined) {
+    return process.env.NODE_ENV === "production" ? 1 : false;
+  }
+  const valorNumerico = Number(valorConfigurado);
+  return Number.isFinite(valorNumerico) && valorNumerico >= 0 ? valorNumerico : 1;
+})();
+app.set("trust proxy", trustProxySetting);
 
 // ==========================================
 // 1. CONFIGURAÇÕES E MIDDLEWARES BÁSICOS
@@ -45,15 +58,22 @@ app.use(cookieParser());
 // 2. CONFIGURAÇÃO DE SESSÃO E AUTENTICAÇÃO
 // ==========================================
 
+const sessaoSegura =
+  process.env.NODE_ENV === "production" ||
+  process.env.FORCE_SECURE_COOKIES === "true";
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
+    rolling: true,
+    proxy: process.env.NODE_ENV === "production" || process.env.TRUST_PROXY !== undefined,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: sessaoSegura,
       httpOnly: true,
       sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
     },
   }),
 );
